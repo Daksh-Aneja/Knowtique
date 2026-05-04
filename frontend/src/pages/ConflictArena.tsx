@@ -28,7 +28,7 @@ const ConflictArena = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Conflict Resolution Arena</h1>
-     <p className="text-gray-400 mt-1">L16 — Structured Async Debate & Resolution</p>
+     <p className="text-gray-400 mt-1">Structured Async Debate & Resolution</p>
     </div>
     <div className="bg-red-100 border border-red-100 px-4 py-2 rounded-xl">
      <div className="text-xs text-red-600 uppercase font-semibold">Open Conflicts</div>

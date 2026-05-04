@@ -43,7 +43,7 @@ export default function RulesExplorer() {
             <BookOpen className="w-8 h-8 text-indigo-600" />
             Rules Explorer
           </h1>
-          <p className="text-gray-500 mt-2">L3 Polystore — {total} rules across {DOMAINS.length - 1} domains</p>
+          <p className="text-gray-500 mt-2">Knowledge Polystore — {total} rules across {DOMAINS.length - 1} domains</p>
         </div>
         <div className="relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

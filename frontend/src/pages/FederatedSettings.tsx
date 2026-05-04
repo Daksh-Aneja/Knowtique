@@ -72,7 +72,7 @@ export default function FederatedSettings() {
         <div>
           <h4 className="text-base font-semibold text-sky-900">Zero-Trust Data Sovereignty</h4>
           <p className="text-sm text-sky-800 mt-2 leading-relaxed">
-            Opting a department into the Federated Network shares strictly anonymized structural metadata (e.g., node count, workflow types, agent autonomy rate). <strong>No PII, raw signals, rule content, or custom YAML</strong> is ever transmitted. By opting in, your organization gains access to L14 Industry Median Benchmarking for that specific department.
+            Opting a department into the Federated Network shares strictly anonymized structural metadata (e.g., node count, workflow types, agent autonomy rate). <strong>No PII, raw signals, rule content, or custom YAML</strong> is ever transmitted. By opting in, your organization gains access to Industry Median Benchmarking for that specific department.
           </p>
         </div>
       </div>

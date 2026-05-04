@@ -21,7 +21,7 @@ const ExtractionHub = () => {
   <div className="p-8 max-w-7xl mx-auto space-y-8">
    <header className="pb-6 border-b border-[#E5E5EA]">
     <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Candidate Broker</h1>
-    <p className="text-gray-400 mt-1">L2 — Knowledge Extraction & Rule Mining</p>
+    <p className="text-gray-400 mt-1">Knowledge Extraction & Rule Mining</p>
    </header>
 
    <div className="flex gap-2 mb-4">

@@ -31,7 +31,7 @@ const RedTeamDashboard = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Red Team Harness</h1>
-     <p className="text-gray-400 mt-1">L12 — Adversarial Testing & KB Vulnerability Scanner</p>
+     <p className="text-gray-400 mt-1">Adversarial Testing & KB Vulnerability Scanner</p>
     </div>
     {summary && (
      <div className="flex gap-3">

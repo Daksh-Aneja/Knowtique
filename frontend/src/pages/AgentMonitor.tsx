@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import type { SkillItem, ExecutionItem } from '../api/client';
 import { api } from '../api/client';
-import { Bot, CheckCircle, XCircle, Clock, AlertTriangle, Zap, ArrowRight, Activity } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import ExecutionDetailView from '../components/ExecutionDetailView';
+import { Bot, CheckCircle, XCircle, Clock, AlertTriangle, Zap, ArrowRight, Activity, ChevronRight } from 'lucide-react';
 
 export default function AgentMonitor() {
+  const { colors } = useTheme();
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [allExecs, setAllExecs] = useState<ExecutionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedExec, setSelectedExec] = useState<ExecutionItem | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -23,7 +27,12 @@ export default function AgentMonitor() {
     });
   }, []);
 
-  if (loading) return <div className="p-8 text-gray-400 animate-pulse">Loading Agent Monitor…</div>;
+  // ── If an execution is selected, show the detail view ──────────────────
+  if (selectedExec) {
+    return <ExecutionDetailView execution={selectedExec} onBack={() => setSelectedExec(null)} colors={colors} />;
+  }
+
+  if (loading) return <div className="p-8 animate-pulse" style={{ color: colors.inkTertiary }}>Loading Agent Monitor…</div>;
 
   const successCount = allExecs.filter((e) => e.status.includes('SUCCESS')).length;
   const overrideCount = allExecs.filter((e) => e.outcome_type === 'HUMAN_OVERRIDDEN').length;
@@ -31,132 +40,134 @@ export default function AgentMonitor() {
   const hitlCount = allExecs.filter((e) => e.hitl_required).length;
 
   const statusIcon = (status: string) => {
-    if (status.includes('SUCCESS')) return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-    if (status === 'HUMAN_OVERRIDDEN') return <Clock className="w-4 h-4 text-amber-500" />;
-    return <XCircle className="w-4 h-4 text-red-500" />;
+    if (status.includes('SUCCESS')) return <CheckCircle className="w-4 h-4" style={{ color: colors.success }} />;
+    if (status === 'HUMAN_OVERRIDDEN') return <Clock className="w-4 h-4" style={{ color: colors.warning }} />;
+    return <XCircle className="w-4 h-4" style={{ color: colors.error }} />;
   };
 
   const statusStyle = (status: string) => {
-    if (status.includes('SUCCESS')) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    if (status === 'HUMAN_OVERRIDDEN') return 'bg-amber-100 text-amber-700 border-amber-200';
-    return 'bg-red-100 text-red-700 border-red-200';
+    if (status.includes('SUCCESS')) return { bg: 'rgba(39,166,68,0.12)', color: colors.success, border: 'rgba(39,166,68,0.25)' };
+    if (status === 'HUMAN_OVERRIDDEN') return { bg: 'rgba(245,166,35,0.12)', color: colors.warning, border: 'rgba(245,166,35,0.25)' };
+    return { bg: 'rgba(229,83,75,0.12)', color: colors.error, border: 'rgba(229,83,75,0.25)' };
   };
 
   const STATES = [
-    { name: 'IDLE', desc: 'Awaiting task', color: 'bg-gray-100 text-gray-600 border-gray-200' },
-    { name: 'ROUTING', desc: 'Skill Router: exact → fuzzy → RAG', color: 'bg-blue-100 text-blue-600 border-blue-200' },
-    { name: 'PRE_CHECK', desc: 'Guardrails + Compliance (L13)', color: 'bg-indigo-100 text-indigo-600 border-indigo-200' },
-    { name: 'EXECUTING', desc: 'Sandbox execution with MCP tools', color: 'bg-purple-100 text-purple-600 border-purple-200' },
-    { name: 'POST_CHECK', desc: 'Audit verification + provenance write', color: 'bg-emerald-100 text-emerald-600 border-emerald-200' },
-    { name: 'REPORTING', desc: 'L10 feedback bus → confidence update', color: 'bg-sky-100 text-sky-600 border-sky-200' },
+    { name: 'IDLE', desc: 'Awaiting task', color: colors.inkSubtle },
+    { name: 'ROUTING', desc: 'Skill Router: exact → fuzzy → RAG', color: colors.info },
+    { name: 'PRE_CHECK', desc: 'Guardrails + Compliance gate', color: colors.primary },
+    { name: 'EXECUTING', desc: 'Sandbox execution with MCP tools', color: colors.primaryHover },
+    { name: 'POST_CHECK', desc: 'Audit verification + provenance write', color: colors.success },
+    { name: 'REPORTING', desc: 'Feedback bus → confidence update', color: colors.info },
   ];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
-            <Bot className="w-8 h-8 text-indigo-600" />
-            Agent Monitor
-          </h1>
-          <p className="text-gray-500 mt-2">L9 Runtime — Real-time agent execution tracking & HITL oversight</p>
-        </div>
-      </header>
-
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-white premium-shadow border border-[#E5E5EA] p-5 rounded-2xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-emerald-100 rounded-lg"><CheckCircle className="w-5 h-5 text-emerald-600" /></div>
-            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Successful</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight text-gray-900">{successCount}</div>
-        </div>
-        <div className="bg-white premium-shadow border border-[#E5E5EA] p-5 rounded-2xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-amber-100 rounded-lg"><Clock className="w-5 h-5 text-amber-600" /></div>
-            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Overrides</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight text-gray-900">{overrideCount}</div>
-        </div>
-        <div className="bg-white premium-shadow border border-[#E5E5EA] p-5 rounded-2xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-red-100 rounded-lg"><XCircle className="w-5 h-5 text-red-600" /></div>
-            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Failed</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight text-gray-900">{failCount}</div>
-        </div>
-        <div className="bg-white premium-shadow border border-[#E5E5EA] p-5 rounded-2xl">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-100 rounded-lg"><Zap className="w-5 h-5 text-purple-600" /></div>
-            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Active Skills</span>
-          </div>
-          <div className="text-3xl font-bold tracking-tight text-gray-900">{skills.length}</div>
-        </div>
+    <div className="p-6 max-w-[1400px] mx-auto space-y-6">
+      <div>
+        <h1 className="text-[28px] font-semibold tracking-tight" style={{ letterSpacing: '-0.6px', color: colors.ink }}>
+          <Bot className="w-7 h-7 inline-block mr-2" style={{ color: colors.primary }} />
+          Agent Monitor
+        </h1>
+        <p className="text-[13px] mt-0.5" style={{ color: colors.inkSubtle }}>Real-time agent execution tracking & HITL oversight</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Execution Feed — 3 cols */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 premium-shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Execution Feed</h2>
-            <span className="text-xs text-gray-400 ml-auto">{allExecs.length} total</span>
-          </div>
-          <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
-            {allExecs.slice(0, 30).map((e) => (
-              <div key={e.id} className="px-6 py-3.5 hover:bg-gray-50/50 transition-colors flex items-center gap-3">
-                {statusIcon(e.status)}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">{e.task_intent}</div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                    <span>{new Date(e.started_at).toLocaleString()}</span>
-                    <span className="font-mono">{e.duration_ms}ms</span>
-                    {e.hitl_required && (
-                      <span className="flex items-center gap-1 text-amber-600 font-medium">
-                        <AlertTriangle className="w-3 h-3" /> HITL
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${statusStyle(e.status)}`}>
-                  {e.status.replace(/_/g, ' ')}
-                </span>
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Successful', value: successCount, icon: CheckCircle, accent: colors.success },
+          { label: 'Overrides', value: overrideCount, icon: Clock, accent: colors.warning },
+          { label: 'Failed', value: failCount, icon: XCircle, accent: colors.error },
+          { label: 'Active Skills', value: skills.length, icon: Zap, accent: colors.primaryHover },
+        ].map((m, i) => (
+          <div key={i} className="rounded-xl p-5" style={{ background: colors.surface1, border: `1px solid ${colors.hairline}` }}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg" style={{ background: `${m.accent}15` }}>
+                <m.icon className="w-5 h-5" style={{ color: m.accent }} />
               </div>
-            ))}
+              <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: colors.inkSubtle }}>{m.label}</span>
+            </div>
+            <div className="text-[28px] font-bold tracking-tight" style={{ color: colors.ink, fontVariantNumeric: 'tabular-nums' }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        {/* Execution Feed — 3 cols */}
+        <div className="lg:col-span-3 rounded-xl overflow-hidden" style={{ background: colors.surface1, border: `1px solid ${colors.hairline}` }}>
+          <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: colors.hairline }}>
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4" style={{ color: colors.primary }} />
+              <span className="text-[14px] font-medium" style={{ color: colors.ink }}>Execution Feed</span>
+            </div>
+            <span className="text-[11px]" style={{ color: colors.inkTertiary }}>{allExecs.length} total</span>
+          </div>
+          <div className="max-h-[600px] overflow-y-auto">
+            {allExecs.slice(0, 30).map((e) => {
+              const ss = statusStyle(e.status);
+              return (
+                <button key={e.id} onClick={() => setSelectedExec(e)}
+                  className="w-full text-left flex items-center gap-3 px-5 py-3.5 border-b transition-colors"
+                  style={{ borderColor: colors.hairline }}
+                  onMouseEnter={ev => (ev.currentTarget.style.background = colors.surface2)}
+                  onMouseLeave={ev => (ev.currentTarget.style.background = 'transparent')}>
+                  {statusIcon(e.status)}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium truncate" style={{ color: colors.ink }}>{e.task_intent}</div>
+                    <div className="flex items-center gap-3 text-[11px] mt-0.5" style={{ color: colors.inkTertiary }}>
+                      <span>{new Date(e.started_at).toLocaleString()}</span>
+                      <span className="font-mono">{e.duration_ms}ms</span>
+                      {e.hitl_required && (
+                        <span className="flex items-center gap-1 font-medium" style={{ color: colors.warning }}>
+                          <AlertTriangle className="w-3 h-3" /> HITL
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded"
+                    style={{ background: ss.bg, color: ss.color, border: `1px solid ${ss.border}` }}>
+                    {e.status.replace(/_/g, ' ')}
+                  </span>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: colors.inkTertiary }} />
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Agent State Machine — 2 cols */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-100 premium-shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-5">Agent State Machine (L9)</h2>
+        <div className="lg:col-span-2 space-y-5">
+          <div className="rounded-xl p-5" style={{ background: colors.surface1, border: `1px solid ${colors.hairline}` }}>
+            <h2 className="text-[14px] font-medium mb-4" style={{ color: colors.ink }}>Agent State Machine</h2>
             <div className="space-y-3">
               {STATES.map((state, i) => (
                 <div key={state.name} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${state.color}`}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                    style={{ background: `${state.color}15`, color: state.color, border: `1px solid ${state.color}30` }}>
                     {i + 1}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-gray-900">{state.name}</div>
-                    <div className="text-xs text-gray-500">{state.desc}</div>
+                    <div className="text-[12px] font-semibold" style={{ color: colors.ink }}>{state.name}</div>
+                    <div className="text-[11px]" style={{ color: colors.inkSubtle }}>{state.desc}</div>
                   </div>
-                  {i < STATES.length - 1 && <ArrowRight className="w-4 h-4 text-gray-300" />}
+                  {i < STATES.length - 1 && <ArrowRight className="w-3.5 h-3.5" style={{ color: colors.hairlineStrong }} />}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Reasoning Chain Sample */}
+          {/* Latest Reasoning Chain */}
           {allExecs[0]?.reasoning_chain?.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 premium-shadow p-6">
-              <h2 className="text-sm font-semibold text-gray-900 mb-4">Latest Reasoning Chain</h2>
+            <div className="rounded-xl p-5" style={{ background: colors.surface1, border: `1px solid ${colors.hairline}` }}>
+              <h2 className="text-[13px] font-medium mb-3" style={{ color: colors.ink }}>Latest Reasoning Chain</h2>
               <div className="space-y-2">
-                {allExecs[0].reasoning_chain.map((step, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm">
-                    <span className="text-xs font-bold text-indigo-600 font-mono w-12">Step {step.step}</span>
-                    <span className="text-gray-700 flex-1">{step.action}</span>
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded border border-emerald-200">{step.status}</span>
+                {allExecs[0].reasoning_chain.map((step: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 text-[12px]">
+                    <span className="font-bold font-mono w-12" style={{ color: colors.primary }}>Step {step.step}</span>
+                    <span className="flex-1" style={{ color: colors.inkMuted }}>{step.action}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                      style={{
+                        background: step.status === 'SUCCESS' ? 'rgba(39,166,68,0.1)' : 'rgba(229,83,75,0.1)',
+                        color: step.status === 'SUCCESS' ? colors.success : colors.error,
+                      }}>{step.status}</span>
                   </div>
                 ))}
               </div>

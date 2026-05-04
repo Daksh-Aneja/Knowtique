@@ -38,7 +38,7 @@ const IntegrationsHub = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Enterprise Integrations</h1>
-     <p className="text-gray-400 mt-1">L0 Data Fabric — Connector Mesh</p>
+     <p className="text-gray-400 mt-1">Data Fabric — Enterprise Connector Mesh</p>
     </div>
     <div className="flex gap-3">
      {stats && (
@@ -129,7 +129,7 @@ const IntegrationsHub = () => {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
        </span>
-       Listening to L0 Data Fabric
+       Listening to Data Fabric
       </div>
      </div>
      
@@ -176,7 +176,7 @@ const IntegrationsHub = () => {
           </div>
           
           <div className="mt-8 bg-black/40 rounded-xl p-3 border border-gray-800 font-mono text-[10px] text-emerald-400/80 max-h-24 overflow-y-auto">
-           <div className="text-gray-500 mb-1">// L9 Orchestrator Log Stream</div>
+           <div className="text-gray-500 mb-1">// Orchestrator Log Stream</div>
            <div>[{new Date().toISOString()}] INFO: Semantic chunker initialized (Strategy: recursive)</div>
            <div>[{new Date().toISOString()}] SUCCESS: Presidio PII Engine scrubbed 0 entities in batch</div>
            <div>[{new Date().toISOString()}] INFO: Generating embeddings via local SentenceTransformer (dim: 384)</div>

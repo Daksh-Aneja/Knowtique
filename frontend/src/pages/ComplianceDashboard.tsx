@@ -22,7 +22,7 @@ const ComplianceDashboard = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Compliance Engine</h1>
-     <p className="text-gray-400 mt-1">L13 — Regulatory Policy Enforcement</p>
+     <p className="text-gray-400 mt-1">Regulatory Policy Enforcement</p>
     </div>
     <div className="flex gap-3">
      <div className="bg-gray-100 px-4 py-2 rounded-xl border border-[#E5E5EA]">

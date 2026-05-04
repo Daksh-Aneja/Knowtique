@@ -52,7 +52,7 @@ export default function ElicitationHub() {
             <MessagesSquare className="w-8 h-8 text-blue-600" />
             Knowledge Capture Hub
           </h1>
-          <p className="text-gray-500 mt-2">L5 Active Elicitation — Targeted micro-surveys for domain expert knowledge harvesting</p>
+          <p className="text-gray-500 mt-2">Active Elicitation — Targeted micro-surveys for domain expert knowledge harvesting</p>
         </div>
       </header>
 

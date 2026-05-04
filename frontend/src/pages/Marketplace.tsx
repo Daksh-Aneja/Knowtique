@@ -24,7 +24,7 @@ const Marketplace = () => {
    try {
      await api.createMarketplaceTemplate({
        ...formData,
-       author: localStorage.getItem('username') || 'L19 Developer',
+       author: localStorage.getItem('username') || 'Developer',
        tags: formData.tags.split(',').map(t => t.trim()).filter(t => t)
      });
      setIsModalOpen(false);
@@ -45,7 +45,7 @@ const Marketplace = () => {
    <header className="flex justify-between items-end pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Skills Marketplace</h1>
-     <p className="text-gray-400 mt-1">L19 — Knowledge Templates & Agent Integrations</p>
+     <p className="text-gray-400 mt-1">Knowledge Templates & Agent Integrations</p>
     </div>
     <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
      <Plus className="w-4 h-4" /> Publish Template

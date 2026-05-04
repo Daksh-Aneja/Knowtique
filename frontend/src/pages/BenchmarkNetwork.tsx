@@ -25,7 +25,7 @@ const BenchmarkNetwork = () => {
   <div className="p-8 max-w-7xl mx-auto space-y-8">
    <header className="pb-6 border-b border-[#E5E5EA]">
     <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Industry Benchmark Network</h1>
-    <p className="text-gray-400 mt-1">L14 — Cross-Org Intelligence (Anonymized)</p>
+    <p className="text-gray-400 mt-1">Cross-Org Intelligence (Anonymized)</p>
    </header>
 
    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

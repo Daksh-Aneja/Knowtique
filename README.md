@@ -29,7 +29,23 @@
 
 Knowtique is an open-source **enterprise-grade epistemic operating system** — the first platform engineered not to *store* what an organisation knows, but to **operationalise how it actually thinks and decides**.
 
-Where conventional knowledge management systems create static, human-readable archives, Knowtique builds a **living, machine-executable Company Brain** — extracting implicit knowledge from enterprise systems, scoring it with 5-dimensional confidence vectors, compiling it into versioned agent contracts (`SKILL.md`), and serving those skills to AI agents through the **AEOS runtime** that executes with precision, auditability, and trust.
+Three engines. One loop:
+
+| Engine | What It Does |
+|--------|-------------|
+| **🧠 Knowledge Engine** | Extracts implicit rules from enterprise systems, scores them with 5D confidence vectors, detects contradictions |
+| **📄 Skill Engine** | Compiles validated rules into versioned, machine-executable agent contracts (`SKILL.md`) |
+| **⚡ Execution Engine (AEOS)** | Runs skills through a 7-gate trust pipeline with compliance, fairness, debate, and provenance — then feeds outcomes back |
+
+These engines form a **continuous intelligence loop**: Execution outcomes feed back into the Knowledge Engine, confidence recalibrates, skills evolve, and agents get smarter with every decision.
+
+---
+
+## 🕐 Why Now
+
+1. **MCP protocol shipped (2025)** — Knowtique is MCP-native. Most competitors aren't. Agent-to-tool interop is finally standardized.
+2. **EU AI Act enforcement begins (2026)** — The fairness engine and compliance gates aren't optional features anymore; they're legally required for autonomous decisions.
+3. **Enterprise AI agent adoption is exploding, but trust infrastructure doesn't exist** — Every enterprise wants agents. None of them can audit what those agents decided, or why. That's the gap Knowtique fills.
 
 ---
 

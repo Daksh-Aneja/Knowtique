@@ -28,7 +28,7 @@ const SecurityFabric = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Security Fabric</h1>
-     <p className="text-gray-400 mt-1">L17 — Zero-Trust Access Control & Audit Trail</p>
+     <p className="text-gray-400 mt-1">Zero-Trust Access Control & Audit Trail</p>
     </div>
     {stats && (
      <div className="flex gap-3">

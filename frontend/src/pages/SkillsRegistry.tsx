@@ -42,7 +42,7 @@ export default function SkillsRegistry() {
             <BrainCircuit className="w-8 h-8 text-purple-600" />
             Skills Registry
           </h1>
-          <p className="text-gray-500 mt-2">L8 Compiler — {skills.length} compiled skills · {totalExec.toLocaleString()} total executions · {(avgSr * 100).toFixed(1)}% avg success</p>
+          <p className="text-gray-500 mt-2">Skill Compiler — {skills.length} compiled skills · {totalExec.toLocaleString()} total executions · {(avgSr * 100).toFixed(1)}% avg success</p>
         </div>
         <div className="relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

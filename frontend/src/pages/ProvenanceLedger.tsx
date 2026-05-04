@@ -24,7 +24,7 @@ const ProvenanceLedger = () => {
   <div className="p-8 max-w-7xl mx-auto space-y-8">
    <header className="pb-6 border-b border-[#E5E5EA]">
     <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Provenance Ledger</h1>
-    <p className="text-gray-400 mt-1">L11 — Immutable, Tamper-Evident Knowledge Lineage</p>
+    <p className="text-gray-400 mt-1">Immutable, Tamper-Evident Knowledge Lineage</p>
    </header>
    <div className="bg-white premium-shadow border border-[#E5E5EA] rounded-2xl overflow-hidden">
     <div className="grid grid-cols-[120px_1fr_120px_80px_1fr_200px] gap-4 px-6 py-3 bg-gray-50 text-xs text-gray-400 uppercase font-semibold border-b border-[#E5E5EA]">

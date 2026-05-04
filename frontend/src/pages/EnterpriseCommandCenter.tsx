@@ -60,7 +60,7 @@ export default function EnterpriseCommandCenter() {
       <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Enterprise Command Center</h1>
-          <p className="text-gray-400 mt-1">L25 Platform Operations — Search, Simulation, Webhooks, Reports</p>
+          <p className="text-gray-400 mt-1">Platform Operations — Search, Simulation, Webhooks, Reports</p>
         </div>
         <div className="flex gap-4">
           <div className="bg-gray-100 px-4 py-2 rounded-xl border border-[#E5E5EA]">

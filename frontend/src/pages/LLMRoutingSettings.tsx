@@ -82,7 +82,7 @@ export default function LLMRoutingSettings() {
         <TrendingDown className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div>
           <h4 className="text-sm font-semibold text-blue-900">Unit Economics Optimization</h4>
-          <p className="text-sm text-blue-800 mt-1">Configure models per execution tier. The L9 SkillRouter will automatically route standard NLP tasks to TIER 3, while preserving TIER 1 exclusively for complex reasoning. Bring Your Own Key (BYOK) ensures data sovereignty.</p>
+          <p className="text-sm text-blue-800 mt-1">Configure models per execution tier. The SkillRouter will automatically route standard NLP tasks to TIER 3, while preserving TIER 1 exclusively for complex reasoning. Bring Your Own Key (BYOK) ensures data sovereignty.</p>
         </div>
       </div>
 

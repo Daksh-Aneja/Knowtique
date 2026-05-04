@@ -36,7 +36,7 @@ const ElicitationSimulator = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">Active Elicitation Engine</h1>
-     <p className="text-gray-400 mt-1">L5 — Human-in-the-Loop Knowledge Capture</p>
+     <p className="text-gray-400 mt-1">Human-in-the-Loop Knowledge Capture</p>
     </div>
     <div className="flex gap-3">
      <div className="bg-gray-100 px-4 py-2 rounded-xl border border-[#E5E5EA]">

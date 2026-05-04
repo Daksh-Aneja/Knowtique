@@ -21,7 +21,7 @@ const Dashboard = () => {
    <header className="flex justify-between items-center pb-6 border-b border-[#E5E5EA]">
     <div>
      <h1 className="text-3xl font-bold tracking-tight text-gray-900 tracking-tight">KB Health & Intelligence Ops</h1>
-     <p className="text-gray-400 mt-1">L18 Observability Dashboard — Live Data</p>
+     <p className="text-gray-400 mt-1">Observability Dashboard — Live Data</p>
     </div>
     <div className="flex gap-4">
      <div className="bg-gray-100 px-4 py-2 rounded-xl border border-[#E5E5EA]">

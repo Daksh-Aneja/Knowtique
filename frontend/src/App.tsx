@@ -14,7 +14,10 @@ const CompanyBrain = lazy(() => import('./views/CompanyBrain'));
 const TrustGovernance = lazy(() => import('./views/TrustGovernance'));
 const SettingsView = lazy(() => import('./views/SettingsView'));
 
-/* ─── Legacy Pages (Full L0-L24 Coverage) ─── */
+/* ─── Getting Started ─── */
+const GettingStarted = lazy(() => import('./pages/GettingStarted'));
+
+/* ─── Module Pages ─── */
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const RulesExplorer = lazy(() => import('./pages/RulesExplorer'));
 const SkillsRegistry = lazy(() => import('./pages/SkillsRegistry'));
@@ -43,6 +46,7 @@ const EnterpriseCommandCenter = lazy(() => import('./pages/EnterpriseCommandCent
 type NavItem = { id: string; label: string; icon: any; children?: NavItem[] };
 
 const NAV: NavItem[] = [
+  { id: 'getting_started', label: 'Getting Started', icon: Zap },
   { id: 'command', label: 'Command Center', icon: LayoutDashboard },
   { id: 'factory', label: 'Agent Factory', icon: Bot },
   { id: 'brain', label: 'Company Brain', icon: BrainCircuit },
@@ -98,13 +102,14 @@ function Shell() {
 
   const renderView = () => {
     switch (view) {
+      case 'getting_started': return <GettingStarted onNavigate={(id: string) => setView(id)} />;
       /* AEOS 5-View */
       case 'command': return <CommandCenter />;
       case 'factory': return <AgentFactory />;
       case 'brain': return <CompanyBrain />;
       case 'trust': return <TrustGovernance />;
       case 'settings': return <SettingsView />;
-      /* Full Layer Pages — wrapped in ThemeAdapter for dark-mode compat */
+      /* Module Pages — wrapped in ThemeAdapter for dark-mode compat */
       case 'dashboard': return <ThemeAdapter><Dashboard /></ThemeAdapter>;
       case 'rules': return <ThemeAdapter><RulesExplorer /></ThemeAdapter>;
       case 'skills': return <ThemeAdapter><SkillsRegistry /></ThemeAdapter>;
@@ -162,7 +167,7 @@ function Shell() {
               className="w-full flex items-center gap-1.5 px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider"
               style={{ color: colors.inkTertiary }}>
               {layersOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-              <span>All Layers (L0-L24)</span>
+              <span>All Modules</span>
             </button>
             {layersOpen && (
               <div className="space-y-0.5">
