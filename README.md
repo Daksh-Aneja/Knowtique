@@ -1,0 +1,263 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Knowtique-Epistemic%20OS-5e6ad2?style=for-the-badge&logoColor=white" alt="Knowtique" />
+  <img src="https://img.shields.io/badge/AEOS-Agent%20Runtime-27a644?style=for-the-badge&logoColor=white" alt="AEOS" />
+</p>
+
+<h1 align="center">Knowtique × AEOS</h1>
+<p align="center">
+  <strong>Enterprise Agentic Knowledge Platform — Powered by the AEOS Agent Runtime</strong>
+</p>
+
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-what-is-aeos">What is AEOS?</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-tech-stack">Tech Stack</a> •
+  <a href="#-contributing">Contributing</a> •
+  <a href="#-license">License</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/fastapi-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+</p>
+
+---
+
+Knowtique is an open-source **enterprise-grade epistemic operating system** — the first platform engineered not to *store* what an organisation knows, but to **operationalise how it actually thinks and decides**.
+
+Where conventional knowledge management systems create static, human-readable archives, Knowtique builds a **living, machine-executable Company Brain** — extracting implicit knowledge from enterprise systems, scoring it with 5-dimensional confidence vectors, compiling it into versioned agent contracts (`SKILL.md`), and serving those skills to AI agents through the **AEOS runtime** that executes with precision, auditability, and trust.
+
+---
+
+## 🤖 What is AEOS?
+
+**AEOS (Agentic Epistemic Operating System)** is the intelligent agent runtime that sits at the heart of Knowtique. While Knowtique handles knowledge extraction and management, AEOS is the execution layer that turns that knowledge into autonomous action.
+
+### The AEOS 7-Gate Execution Pipeline
+
+Every agent action passes through a mandatory 7-gate trust pipeline before execution:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    AEOS Agent Execution Pipeline                     │
+├─────────┬───────────┬────────────┬────────┬─────────┬───────┬───────┤
+│ Gate 1  │  Gate 2   │   Gate 3   │ Gate 4 │ Gate 5  │Gate 6 │Gate 7 │
+│Compliance│ Fairness  │ Confidence │ Debate │ Execute │Prove- │Feed-  │
+│Pre-Check│Assessment │  → HITL    │ Engine │  + LLM  │nance  │back   │
+│ (L13)   │   (P3)    │   Gate     │  (P6)  │         │ (L11) │ (L10) │
+│         │           │            │        │         │       │       │
+│Blocks   │Demographic│If < 0.82 → │3-agent │Skill    │SHA-256│Bayesian│
+│SOX/GDPR │impact     │human       │adversa-│steps    │hash   │update │
+│/PCI     │scoring    │review      │rial    │evaluated│chain  │+ learn│
+│violations│          │queue       │debate  │via LLM  │audit  │       │
+└─────────┴───────────┴────────────┴────────┴─────────┴───────┴───────┘
+```
+
+### AEOS Built-in Capabilities
+
+| Module | What It Does |
+|--------|-------------|
+| **External Intelligence** | Ingests external signals (regulatory changes, vendor API deprecations, market shifts) and correlates with internal KB to generate proactive alerts |
+| **Org Intelligence** | Maps influence networks, change readiness scores, and skills topology across business units |
+| **Fairness Engine** | Fairness scoring (0.0–1.0) across 5 protected attributes. Pre-execution ethics gate blocks biased actions |
+| **Temporal Reasoning** | Native time-aware decisions — fiscal calendars, payroll cycles, compliance deadlines |
+| **Federated Learning** | Zero-knowledge skill sharing across tenants. Privacy-preserving model aggregation |
+| **Debate Engine** | Proposer/Devil's Advocate/Arbitrator adversarial reasoning for high-stakes actions |
+
+### AEOS Agent Factory
+
+Build agents with natural language — the AEOS Agent Factory pipeline:
+
+```
+Prompt → Blueprint → Refine → Approve → Compile → Deploy → Monitor
+```
+
+1. **Describe** what you need in plain English
+2. **AEOS generates** a structured agent blueprint (domain, capabilities, risk level, data sources)
+3. **Review & refine** the blueprint interactively
+4. **Compile** into a deployable agent with SKILL.md contracts
+5. **Deploy** with full trust pipeline enforcement
+6. **Monitor** execution in real-time via the Command Center
+
+---
+
+## ✨ Features
+
+### Five Operating Modes
+
+| Mode | What It Does |
+|------|-------------|
+| **🌾 HARVEST** | Passively mines enterprise systems using ML to reverse-engineer implicit business rules — zero employee effort |
+| **🎯 ELICITATION** | Deploys behavioural-science-informed micro-surveys targeting real recent events to capture tacit knowledge |
+| **⚡ EXECUTION** | Serves structured, versioned SKILL.md files to AI agents via MCP with AEOS trust pipeline enforcement |
+| **🔍 REFLECTION** | Autonomous KB sweep — contradiction scanning, coverage gap analysis, staleness detection |
+| **🧬 EVOLUTION** | Rewrites rules based on production agent execution data. Promotes, demotes, archives — compounding intelligence flywheel |
+
+### Knowledge Engine
+
+- **Data Fabric** — ETL pipeline with DAG-based transforms, PII scrubbing, chunking
+- **Knowledge Extraction** — HDBSCAN clustering + LLM-powered rule mining and contradiction detection
+- **Polystore** — PostgreSQL rules + Neo4j graph + pgvector embeddings
+- **5D Confidence Scoring** — Weighted harmonic mean across source breadth, authority, temporal freshness, outcome validation, explicit validation
+- **Temporal Decay** — Half-life model `C(t) = C₀ × 0.5^(t/T½)` with scheduled hourly decay loops
+- **SKILL.md Compilation** — Versioned agent contracts with progressive disclosure (3 levels)
+- **Closed-Loop Feedback** — Agent outcomes feed back into KB. Success reinforces, failure triggers elicitation
+
+### Trust & Governance
+
+- **Provenance Ledger** — SHA-256 hash chain audit trail for every KB write and agent action
+- **Red Team Harness** — Boundary testing, prompt injection defence, confidence calibration
+- **Compliance Engine** — GDPR, SOX, HIPAA, PCI-DSS pre-execution blocking
+- **Conflict Resolution** — Split-screen workspace for resolving contradictions between rules
+- **Skills Marketplace** — Community-rated skill templates with fork-and-customise workflow
+
+### Advanced Capabilities
+
+- **Predictive Ops** — Analyzes signals for latent intent, suggests proactive actions
+- **Polymorphic Engine** — Self-writing MCP tools, LLM-generated integration code
+- **Federated Intelligence** — Zero-knowledge skill sharing across tenants
+- **Ambient Monitoring** — Continuous macro-signal monitoring with auto-regulatory rule synthesis
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+graph TD
+    subgraph "Knowledge Layer"
+        A[Enterprise Data Sources] --> B[L0: Data Fabric + ETL]
+        B --> C[L1: PII Scrubbing + Signal Extraction]
+        C --> D[L2: Knowledge Extraction + HDBSCAN]
+        D --> E[L3: Polystore — Rules + Graph + Vectors]
+        E --> F[L6: 5D Confidence Scoring]
+        F --> G[L7: Temporal Decay Management]
+        G --> H[L8: SKILL.md Compilation]
+    end
+
+    subgraph "AEOS Agent Runtime"
+        H --> I[L9: Skill Router]
+        I --> J["Gate 1: Compliance (L13)"]
+        J --> K["Gate 2: Fairness (P3)"]
+        K --> L["Gate 3: Confidence → HITL"]
+        L --> M["Gate 4: Debate Engine (P6)"]
+        M --> N["Gate 5: LLM Execution"]
+        N --> O["Gate 6: Provenance (L11)"]
+        O --> P["Gate 7: Feedback (L10)"]
+        P --> F
+    end
+
+    subgraph "AEOS Modules"
+        Q[External Intelligence] --> I
+        R[Org Intelligence] --> I
+        S[Temporal Reasoning] --> I
+        T[Federated Learning] --> F
+    end
+
+    subgraph "Trust & Governance"
+        N --> U[L12: Red Team Harness]
+        N --> V[L17: Security Fabric]
+    end
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python 3.11+**
+- **Node.js 20+**
+- **Git**
+
+### Option 1: Docker (Recommended)
+
+```bash
+git clone https://github.com/Daksh-Aneja/Knowtique.git
+cd Knowtique
+cp .env.example .env
+# Edit .env with your LLM API keys (optional — platform works without them)
+docker compose up --build
+```
+
+- **Frontend**: http://localhost:5174
+- **Backend API**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
+
+### Option 2: Manual Setup
+
+```bash
+# Clone
+git clone https://github.com/Daksh-Aneja/Knowtique.git
+cd Knowtique
+cp .env.example .env
+
+# Backend
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+The backend auto-seeds with demo data (6 skills, 24 rules, 18 connectors, sample executions) on first launch.
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | FastAPI 0.115 · SQLAlchemy 2.0 · Pydantic 2.9 |
+| **Database** | SQLite (dev) · PostgreSQL (prod) |
+| **Frontend** | React 19 · Vite 8 · TypeScript 6 · TailwindCSS 4 |
+| **LLM** | LiteLLM (BYOK) — Anthropic, OpenAI, Groq, Mistral, Ollama |
+| **AEOS Runtime** | 7-gate trust pipeline · Debate engine · Fairness gate |
+| **Design** | Linear-inspired dark/light system · Inter + JetBrains Mono |
+| **Charts** | Recharts · Framer Motion |
+
+## 📊 Platform Scale
+
+| Metric | Count |
+|--------|-------|
+| Backend API Routes | 112 |
+| Backend Services | 29 modules |
+| Domain Models | 22 SQLAlchemy models |
+| Frontend Views | 5 consolidated + 23 detailed pages |
+| Architecture Layers | 30 total |
+| AEOS Trust Gates | 7 per execution |
+| API Client Methods | 60+ typed fetch functions |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+- **Bug Reports**: Open an issue with reproduction steps
+- **Feature Requests**: Open an issue with use case description
+- **Pull Requests**: Fork → branch → commit → PR
+
+## 📄 License
+
+This project is licensed under the **Apache License 2.0** — see the [LICENSE](LICENSE) file for details.
+
+## 🔒 Security
+
+If you discover a security vulnerability, please see [SECURITY.md](SECURITY.md) for our responsible disclosure policy. **Do not open public issues for security vulnerabilities.**
+
+---
+
+<p align="center">
+  <strong>Knowtique × AEOS</strong> — Knowledge that thinks. Agents that reason.
+  <br/>
+  Built with ❤️ for the open-source AI community
+</p>
