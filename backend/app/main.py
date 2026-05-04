@@ -37,9 +37,6 @@ async def lifespan(app: FastAPI):
             logger.info("Database seeded with Knowtique demo data")
         else:
             logger.info("Database already contains data, skipping seed")
-
-        from app.core.auth import initialize_dev_mode
-        initialize_dev_mode()
     yield
     # Shutdown cleanup (close connection pools etc.) goes here if needed
 
@@ -51,9 +48,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── Middleware (order matters — outermost runs first) ─────────────────────────
+# ── Middleware (order matters — outermost is added LAST) ─────────────────────────
 
-# CORS must be outermost
+# Tenant resolution — runs after CORS on incoming, but must be added FIRST
+app.add_middleware(TenantMiddleware)
+
+# CORS must be outermost, so it is added LAST
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS if hasattr(settings, "CORS_ORIGINS") else ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
@@ -61,9 +61,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Tenant resolution — runs after CORS, before all route handlers
-app.add_middleware(TenantMiddleware)                        # ← NEW
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
