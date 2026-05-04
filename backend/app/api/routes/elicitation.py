@@ -116,6 +116,19 @@ async def elicitation_dashboard(db: AsyncSession = Depends(get_db)):
     )
     answered_count = total_answered.scalar() or 0
 
+    # Compute avg quality score from answered questions' quality dimensions
+    avg_quality_q = await db.execute(
+        select(
+            sqlfunc.avg(ElicitationQuestion.specificity),
+            sqlfunc.avg(ElicitationQuestion.groundedness),
+            sqlfunc.avg(ElicitationQuestion.answerability),
+        ).where(ElicitationQuestion.status == "ANSWERED")
+    )
+    avg_spec, avg_ground, avg_answer = avg_quality_q.one()
+    avg_quality_score = round(
+        ((avg_spec or 0) + (avg_ground or 0) + (avg_answer or 0)) / 3, 3
+    ) if any([avg_spec, avg_ground, avg_answer]) else 0.0
+
     return ElicitationDashboardResponse(
         pending_questions=pending,
         recent_answers=recent,
@@ -124,7 +137,7 @@ async def elicitation_dashboard(db: AsyncSession = Depends(get_db)):
             "total_questions": total_sent,
             "total_answered": answered_count,
             "response_rate": round(answered_count / max(total_sent, 1), 3),
-            "avg_quality_score": 0.82,
+            "avg_quality_score": avg_quality_score,
             "questions_this_week": len(pending),
         },
     )

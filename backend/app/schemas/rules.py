@@ -23,7 +23,6 @@ class ConfidenceVectorSchema(BaseModel):
 
 
 class RuleCreate(BaseModel):
-    tenant_id: str = "tenant_default"
     statement: str
     trigger_json: Dict[str, Any]
     action_json: Dict[str, Any]

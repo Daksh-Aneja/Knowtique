@@ -9,6 +9,7 @@ import json
 import uuid
 
 from app.core.database import get_db
+from app.core.tenant import get_tenant_id
 from app.models.domain import (
     Rule, RuleGuardrail, ProvenanceLedger, ConfidenceHistory,
     ConfidenceTier,
@@ -88,7 +89,7 @@ async def get_rule(rule_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=RuleResponse, status_code=201)
-async def create_rule(body: RuleCreate, db: AsyncSession = Depends(get_db)):
+async def create_rule(body: RuleCreate, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """Create a new candidate rule (enters KB at INFERRED tier)."""
     vector = {
         "source_breadth": 0.3,
@@ -102,7 +103,7 @@ async def create_rule(body: RuleCreate, db: AsyncSession = Depends(get_db)):
 
     rule = Rule(
         id=str(uuid.uuid4()),
-        tenant_id=body.tenant_id,
+        tenant_id=tenant_id,
         statement=body.statement,
         trigger_json=body.trigger_json,
         action_json=body.action_json,

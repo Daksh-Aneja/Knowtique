@@ -73,7 +73,7 @@ class ChunkerNode(BaseTransformNode):
                 continue
 
             # Chunk using enterprise LangChain splitters
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             chunks = await loop.run_in_executor(
                 None,
                 self._langchain_chunk,

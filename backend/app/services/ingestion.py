@@ -34,7 +34,7 @@ class IngestionPipeline:
         payload_text = event.get('payload', '')
         
         # 1. PII Scrubbing
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         scrub_result = await loop.run_in_executor(None, self.scrubber.scrub, payload_text)
         
         # 2. Source Authority Scoring
