@@ -206,6 +206,7 @@ export interface Signal {
   clean_payload: string;
   authority_score: number;
   novelty_score: number;
+  pii_present: boolean;
   created_at: string;
 }
 

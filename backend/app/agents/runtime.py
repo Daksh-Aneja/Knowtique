@@ -74,26 +74,28 @@ class AgentExecutor:
             self._activity_feed = ActivityFeedService()
         return self._activity_feed
 
-    async def execute_skill(self, skill: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_skill(
+        self, skill: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Executes a skill contract with full AEOS gate pipeline."""
-        
-        # ── Gate 1: Compliance Pre-Check (L13) ──
-        violations = self.compliance.check_before_execution(skill.get("compliance_tags", []), context)
+
+        # ── Gate 1: Compliance Pre-Check (L13) ──────────────────────────
+        violations = self.compliance.check_before_execution(
+            skill.get("compliance_tags", []), context
+        )
         if violations:
             return {"status": "BLOCKED_COMPLIANCE", "violations": violations}
 
-        # ── Gate 2: Fairness Check (AEOS P3) ──
-        # Only for skills that touch Employee/HCM data
-        skill_obj = context.get("_skill_obj")  # Skill ORM object if available
+        # ── Gate 2: Fairness Check (AEOS P3) ────────────────────────────
+        skill_obj = context.get("_skill_obj")
         if skill_obj and self.fairness_engine.requires_fairness_check(skill_obj, context):
             fairness_result = await self.fairness_engine.score_fairness(
-                skill_obj, context, 
+                skill_obj, context,
                 tenant_id=context.get("tenant_id", "default"),
                 execution_id=context.get("execution_id"),
             )
             if not fairness_result["passed"]:
                 logger.warning(f"Fairness gate BLOCKED: {fairness_result['flagged_attributes']}")
-                # Emit activity event
                 from app.models.agent_factory import ActivityEventType, ActivitySeverity
                 await self.activity_feed.emit(
                     event_type=ActivityEventType.FAIRNESS_BLOCKED,
@@ -113,14 +115,13 @@ class AgentExecutor:
                     "audit_log_id": fairness_result["audit_log_id"],
                 }
 
-        # ── Gate 3: Confidence → HITL Check ──
-        if skill['confidence'] < 0.82:  # AUTONOMOUS_THRESHOLD
+        # ── Gate 3: Confidence → HITL Check ─────────────────────────────
+        if skill.get("confidence", 0) < 0.82:
             gate_decision = await self.hitl.request_human_confirmation(skill, context)
-            if not gate_decision['approved']:
-                return {"status": "HUMAN_OVERRIDDEN", "reason": gate_decision['reason']}
+            if not gate_decision["approved"]:
+                return {"status": "HUMAN_OVERRIDDEN", "reason": gate_decision["reason"]}
 
-        # ── Gate 4: Debate Engine (AEOS P6) ──
-        # For Tier-1 actions: compliance-tagged, low confidence, or first execution
+        # ── Gate 4: Debate Engine (AEOS P6) ─────────────────────────────
         if skill_obj:
             should_debate, debate_reason = self.debate_engine.should_debate(skill_obj, context)
             if should_debate:
@@ -131,7 +132,7 @@ class AgentExecutor:
                     tenant_id=context.get("tenant_id", "default"),
                 )
                 decision = (transcript.arbitrator_decision or {}).get("decision", "ESCALATE")
-                
+
                 if decision == "BLOCK":
                     from app.models.agent_factory import ActivityEventType, ActivitySeverity
                     await self.activity_feed.emit(
@@ -166,19 +167,53 @@ class AgentExecutor:
                         "debate_decision": decision,
                         "transcript_id": transcript.id,
                     }
-                # PROCEED — continue to execution
+                # PROCEED — fall through to Gate 5
 
-        # ── Execution: Generative Skill Run ──
-        from app.services.llm_router import LLMRouter
+        # ── Gate 5: Generative Skill Execution ──────────────────────────
         import uuid
-        router = LLMRouter()
+        from app.services.skill_executor import SkillExecutionEngine
+
         exec_id = context.get("execution_id", f"exec-{uuid.uuid4().hex[:8]}")
-        logger.info(f"Executing skill {skill['skill_id']} autonomously. Exec ID: {exec_id}")
-        
-        # ── Post-Execution: Audit ──
-        audit_passed = self.compliance.enforce_audit_requirements(skill.get("compliance_tags", []), context)
+        context["execution_id"] = exec_id
+        context["tenant_id"] = context.get("tenant_id", "default")
+
+        exec_engine = SkillExecutionEngine()
+        exec_result = await exec_engine.run(
+            skill=skill,
+            context=context,
+            execution_id=exec_id,
+            tenant_id=context["tenant_id"],
+            skill_obj=skill_obj,
+        )
+
+        if exec_result["status"] != "SUCCESS_CLEAN":
+            from app.models.agent_factory import ActivityEventType, ActivitySeverity
+            await self.activity_feed.emit(
+                event_type=ActivityEventType.AGENT_FAILED,
+                title=f"Execution failed: {skill.get('skill_id', 'unknown')}",
+                description=(
+                    f"Status: {exec_result['status']} after "
+                    f"{exec_result['steps_completed']} steps ({exec_result['duration_ms']}ms)"
+                ),
+                tenant_id=context["tenant_id"],
+                severity=ActivitySeverity.ACTION_REQUIRED,
+                source_type="execution",
+                source_id=exec_id,
+                requires_action=True,
+            )
+            return exec_result
+
+        logger.info(
+            f"[Gate 5] SUCCESS: {skill.get('skill_id', 'unknown')} — "
+            f"{exec_result['steps_completed']} steps in {exec_result['duration_ms']}ms"
+        )
+
+        # ── Gate 6: Post-Execution Audit ─────────────────────────────────
+        audit_passed = self.compliance.enforce_audit_requirements(
+            skill.get("compliance_tags", []), context
+        )
         if not audit_passed:
             logger.error("Audit post-execution checks failed.")
             return {"status": "FAILED_AUDIT"}
-            
+
         return {"status": "SUCCESS_CLEAN", "execution_id": exec_id}

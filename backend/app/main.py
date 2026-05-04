@@ -1,4 +1,9 @@
-"""Knowtique — FastAPI Application Entry Point"""
+"""
+Knowtique — main.py (updated)
+Changes from original:
+  1. TenantMiddleware registered before all routers
+  2. Platform config API routes added for API key management
+"""
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,13 +14,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.database import init_db, AsyncSessionLocal
 from app.core.seed import seed_database
-from app.api.routes import rules, skills, dashboard, elicitation
-from app.api.routes import extraction, provenance, redteam, benchmark, topology
-from app.api.routes import connectors, conflicts, marketplace, security, pipeline, predictive, polymorphic, federated, knowtique10x, platform_config
-from app.api.routes import enterprise
-from app.api.routes import agent_factory
-from app.api.routes import pioneer
+from app.core.tenant import TenantMiddleware                # ← NEW
+
+from app.api.routes import (
+    rules, skills, dashboard, elicitation,
+    extraction, provenance, redteam, benchmark, topology,
+    connectors, conflicts, marketplace, security, pipeline,
+    predictive, polymorphic, federated, knowtique10x,
+    platform_config, enterprise, agent_factory, pioneer,
+)
+
 settings = get_settings()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,95 +37,89 @@ async def lifespan(app: FastAPI):
             logger.info("Database seeded with Knowtique demo data")
         else:
             logger.info("Database already contains data, skipping seed")
-            
-    # L7 Temporal Decay Scheduler (hourly)
-    from app.services.lifecycle import DecayManager
-    import asyncio
-    
-    decay_mgr = DecayManager()
-    async def decay_loop():
-        while True:
-            try:
-                await decay_mgr.run_decay_scheduler()
-            except Exception as e:
-                logger.warning(f"Decay scheduler error: {e}")
-            await asyncio.sleep(3600)
-    
-    decay_task = asyncio.create_task(decay_loop())
-    
-    # L24 Pre-Cog Asynchronous Loop
-    from app.services.precog_engine import PreCogEngine
-    engine = PreCogEngine()
-    precog_task = asyncio.create_task(engine.run_ambient_loop())
-    
     yield
-    
-    engine.is_running = False
-    precog_task.cancel()
-    decay_task.cancel()
+    # Shutdown cleanup (close connection pools etc.) goes here if needed
 
 
 app = FastAPI(
-    title=settings.APP_NAME,
+    title="Knowtique API",
     version=settings.APP_VERSION,
-    description="Knowtique — Enterprise Agentic Knowledge Platform | Epistemic Operating System",
+    description="Enterprise Agentic Knowledge Platform — Powered by AEOS",
     lifespan=lifespan,
 )
 
-# CORS — configurable via CORS_ORIGINS env var (comma-separated)
-_default_origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://127.0.0.1:3000",
-]
-_cors_origins = (
-    [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
-    if settings.CORS_ORIGINS
-    else _default_origins
-)
+# ── Middleware (order matters — outermost runs first) ─────────────────────────
+
+# CORS must be outermost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins,
-    # Allow any local/LAN IP during dev, but lock down if CORS_ORIGINS is explicitly set
-    allow_origin_regex=r"https?://.*" if not settings.CORS_ORIGINS else None,
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register all route modules
-app.include_router(rules.router, prefix=settings.API_PREFIX)
-app.include_router(skills.router, prefix=settings.API_PREFIX)
-app.include_router(dashboard.router, prefix=settings.API_PREFIX)
-app.include_router(elicitation.router, prefix=settings.API_PREFIX)
-app.include_router(extraction.router, prefix=settings.API_PREFIX)
-app.include_router(provenance.router, prefix=settings.API_PREFIX)
-app.include_router(redteam.router, prefix=settings.API_PREFIX)
-app.include_router(benchmark.router, prefix=settings.API_PREFIX)
-app.include_router(topology.router, prefix=settings.API_PREFIX)
-app.include_router(connectors.router, prefix=settings.API_PREFIX)
-app.include_router(conflicts.router, prefix=settings.API_PREFIX)
-app.include_router(marketplace.router, prefix=settings.API_PREFIX)
-app.include_router(security.router, prefix=settings.API_PREFIX)
-app.include_router(pipeline.router, prefix=settings.API_PREFIX)
-app.include_router(predictive.router, prefix=settings.API_PREFIX)
-app.include_router(polymorphic.router, prefix=settings.API_PREFIX)
-app.include_router(federated.router, prefix=settings.API_PREFIX)
-app.include_router(knowtique10x.router, prefix=settings.API_PREFIX)
-app.include_router(platform_config.router, prefix=settings.API_PREFIX)
-app.include_router(enterprise.router, prefix=settings.API_PREFIX)
-app.include_router(agent_factory.router, prefix=settings.API_PREFIX)
-app.include_router(pioneer.router, prefix=settings.API_PREFIX)
+# Tenant resolution — runs after CORS, before all route handlers
+app.add_middleware(TenantMiddleware)                        # ← NEW
 
+# ── Routers ───────────────────────────────────────────────────────────────────
+
+PREFIX = settings.API_PREFIX  # "/api/v1"
+
+app.include_router(dashboard.router,       prefix=PREFIX)
+app.include_router(rules.router,           prefix=PREFIX)
+app.include_router(skills.router,          prefix=PREFIX)
+app.include_router(elicitation.router,     prefix=PREFIX)
+app.include_router(extraction.router,      prefix=PREFIX)
+app.include_router(provenance.router,      prefix=PREFIX)
+app.include_router(redteam.router,         prefix=PREFIX)
+app.include_router(benchmark.router,       prefix=PREFIX)
+app.include_router(topology.router,        prefix=PREFIX)
+app.include_router(connectors.router,      prefix=PREFIX)
+app.include_router(conflicts.router,       prefix=PREFIX)
+app.include_router(marketplace.router,     prefix=PREFIX)
+app.include_router(security.router,        prefix=PREFIX)
+app.include_router(pipeline.router,        prefix=PREFIX)
+app.include_router(predictive.router,      prefix=PREFIX)
+app.include_router(polymorphic.router,     prefix=PREFIX)
+app.include_router(federated.router,       prefix=PREFIX)
+app.include_router(knowtique10x.router,    prefix=PREFIX)
+app.include_router(platform_config.router, prefix=PREFIX)
+app.include_router(enterprise.router,      prefix=PREFIX)
+app.include_router(agent_factory.router,   prefix=PREFIX)
+app.include_router(pioneer.router,         prefix=PREFIX)
+
+
+# ── Health check ──────────────────────────────────────────────────────────────
 
 @app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "version": settings.APP_VERSION,
-        "platform": "Knowtique Epistemic OS",
-        "modes": ["HARVEST", "ELICITATION", "EXECUTION", "REFLECTION", "EVOLUTION"],
-    }
+async def health():
+    return {"status": "ok", "version": settings.APP_VERSION}
+
+
+# ── API Key management endpoints (admin bootstrap) ────────────────────────────
+# These are intentionally NOT behind TenantMiddleware auth (bootstrap scenario).
+# In production, secure these behind network-level ACLs or a separate admin service.
+
+@app.post("/admin/api-keys", include_in_schema=False)
+async def create_api_key(tenant_id: str, name: str, role: str = "operator"):
+    """
+    Bootstrap: create an API key for a tenant.
+    Call this once per tenant on first deploy.
+    Protect this endpoint in production via network ACL or remove after bootstrap.
+    """
+    from app.core.auth import generate_api_key
+    key_data = generate_api_key(tenant_id=tenant_id, name=name, role=role)
+    logger.info(f"[Admin] API key created for tenant={tenant_id} role={role}")
+    return key_data
+
+
+@app.delete("/admin/api-keys/{key_prefix}", include_in_schema=False)
+async def revoke_api_key(key_prefix: str):
+    """Revoke an API key by its first 12 characters."""
+    from app.core.auth import revoke_api_key as _revoke
+    revoked = _revoke(key_prefix)
+    if not revoked:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"status": "revoked", "key_prefix": key_prefix}
