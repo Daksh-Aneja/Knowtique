@@ -79,6 +79,7 @@ _cors_origins = (
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
+    allow_origin_regex=r"https?://.*", # Allow LAN IPs for local development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

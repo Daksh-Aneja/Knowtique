@@ -603,6 +603,15 @@ export const api = {
     }),
   getSkillsTopology: () => request<any>('/org-intelligence/skills-topology'),
 
+  // Topology
+  getTopology: () => request<any>('/topology/graph'),
+
+  // Provenance Ledger
+  getProvenanceLedger: () => request<any>('/provenance/global/ledger'),
+
+  // Elicitation
+  getElicitationDashboard: () => request<any>('/elicitation/dashboard'),
+
   // L6: Simulation
   runSimulation: (changeDescription: string, targetDomain: string, riskTolerance?: string) =>
     request<any>('/simulation/what-if', {
