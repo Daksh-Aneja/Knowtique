@@ -11,7 +11,7 @@ from app.models.domain import (
 from app.models.settings import LLMRoutingConfig, MCPToolConfig, OntologyConfig, FederatedConfig
 
 T = "tenant_acme"
-NOW = datetime.now(timezone.utc)
+NOW = None  # Set at seed time by seed_database()
 
 
 def _id():
@@ -299,9 +299,9 @@ def seed_redteam_scans(skills):
 
 def seed_llm_routing():
     return [
-        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_1_COMPLEX", model_name="claude-sonnet-4-20250514", api_key="your-api-key-here", provider="Anthropic"),
-        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_2_STANDARD", model_name="claude-sonnet-4-20250514", api_key="your-api-key-here", provider="Anthropic"),
-        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_3_FAST", model_name="claude-haiku-4-20250414", api_key="your-api-key-here", provider="Anthropic"),
+        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_1_COMPLEX", model_name="claude-sonnet-4-6", api_key="your-api-key-here", provider="Anthropic"),
+        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_2_STANDARD", model_name="claude-sonnet-4-6", api_key="your-api-key-here", provider="Anthropic"),
+        LLMRoutingConfig(id=_id(), tenant_id=T, layer="TIER_3_FAST", model_name="claude-haiku-4-5-20251001", api_key="your-api-key-here", provider="Anthropic"),
     ]
 
 
@@ -338,6 +338,9 @@ def seed_federated_config():
 
 async def seed_database(db_session):
     """Main seed function — call on startup."""
+    global NOW
+    NOW = datetime.now(timezone.utc)
+
     from sqlalchemy import select
     existing = await db_session.execute(select(Skill).limit(1))
     if existing.scalar_one_or_none():

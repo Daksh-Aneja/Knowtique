@@ -14,9 +14,31 @@ import uuid
 from app.core.database import get_db
 from app.models.domain import SecurityAuditLog
 
-# In-memory API key store (production: migrate to DB table)
+import os
+import json
+
+KEYS_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "api_keys.json")
+
+def load_keys():
+    if os.path.exists(KEYS_FILE):
+        try:
+            with open(KEYS_FILE, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load API keys: {e}")
+    return {}
+
+def save_keys(keys):
+    os.makedirs(os.path.dirname(KEYS_FILE), exist_ok=True)
+    try:
+        with open(KEYS_FILE, "w") as f:
+            json.dump(keys, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to save API keys: {e}")
+
+# Persistent API key store
 # Format: { hashed_key: { tenant_id, role, name, created_at, rate_limit } }
-_API_KEYS = {}
+_API_KEYS = load_keys()
 
 security = HTTPBearer(auto_error=False)
 
@@ -37,6 +59,7 @@ def generate_api_key(tenant_id: str, name: str, role: str = "operator") -> dict:
         "rate_limit": 1000,  # requests/hour
         "active": True,
     }
+    save_keys(_API_KEYS)
     return {"api_key": raw_key, "key_id": hashed[:12], "tenant_id": tenant_id, "role": role}
 
 
@@ -45,6 +68,7 @@ def revoke_api_key(key_id_prefix: str) -> bool:
     for hashed, meta in _API_KEYS.items():
         if hashed.startswith(key_id_prefix):
             meta["active"] = False
+            save_keys(_API_KEYS)
             return True
     return False
 
@@ -85,6 +109,8 @@ async def get_current_tenant(
     }
 
 
-# Seed a default dev key on import
-_dev_key = generate_api_key("tenant_acme", "dev_default", "admin")
-logger.info(f"[AUTH] Dev API Key: {_dev_key['api_key'][:8]}... (truncated)")
+def initialize_dev_mode():
+    """Seed a default dev key if no keys exist."""
+    if not _API_KEYS:
+        dev_key = generate_api_key("tenant_acme", "dev_default", "admin")
+        logger.info(f"[AUTH] Dev API Key generated: {dev_key['api_key'][:8]}... (truncated)")

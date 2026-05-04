@@ -3,7 +3,7 @@ Platform-wide real-time event bus replacing static dashboards.
 """
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -128,7 +128,7 @@ class ActivityFeedService:
                 .values(
                     action_taken=True,
                     action_taken_by=action_by,
-                    action_taken_at=datetime.utcnow(),
+                    action_taken_at=datetime.now(timezone.utc),
                 )
             )
             await session.execute(stmt)

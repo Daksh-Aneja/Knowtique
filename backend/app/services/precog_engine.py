@@ -87,8 +87,9 @@ class PreCogEngine:
                 f"Does this macroeconomic signal negatively impact the confidence of this rule? Output JSON: {{\"impacted\": true/false, \"decay_factor\": 0.85}}"
             )
             try:
-                res = await router.complete(prompt=prompt, model="gpt-4o-mini")
-                analysis = json.loads(res.get("content", "{}"))
+                res = await router.complete(prompt=prompt, model_tier="fast")
+                content = res if isinstance(res, str) else res.get("content", "{}")
+                analysis = json.loads(content) if isinstance(content, str) else content
                 if analysis.get("impacted"):
                     decay = analysis.get("decay_factor", 0.85)
                     old_conf = rule.confidence_scalar

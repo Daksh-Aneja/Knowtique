@@ -44,8 +44,9 @@ Ensure it has an async execute(self, payload: dict) method and uses httpx for AP
 Include rigorous error handling and logging. Output strictly the python code. No markdown formatting."""
         
         try:
-            response = await router.complete(prompt=prompt, model="gpt-4o-mini")
-            code = response.get("content", "").replace("```python", "").replace("```", "").strip()
+            response = await router.complete(prompt=prompt, model_tier="fast")
+            raw = response if isinstance(response, str) else response.get("content", "")
+            code = raw.replace("```python", "").replace("```", "").strip()
             return code
         except Exception as e:
             logger.error(f"Polymorphic LLM generation failed: {e}")

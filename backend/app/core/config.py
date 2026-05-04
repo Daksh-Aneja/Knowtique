@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_PREFIX: str = "/api/v1"
     SECRET_KEY: str = ""  # REQUIRED: set in .env — python -c "import secrets; print(secrets.token_urlsafe(32))"
+    ADMIN_SECRET: str = "dev_secret"  # REQUIRED: set in .env for production
 
     # Database — SQLite for local dev, PostgreSQL for production
     DATABASE_URL: str = "sqlite+aiosqlite:///./knowtique.db"
@@ -36,9 +37,9 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
-    LLM_MODEL_CLASSIFICATION: str = "claude-haiku-4-20250414"
-    LLM_MODEL_EXTRACTION: str = "claude-sonnet-4-20250514"
-    LLM_MODEL_REASONING: str = "claude-opus-4-20250514"
+    LLM_MODEL_CLASSIFICATION: str = "claude-haiku-4-5-20251001"
+    LLM_MODEL_EXTRACTION: str = "claude-sonnet-4-6"
+    LLM_MODEL_REASONING: str = "claude-opus-4-6"
     LLM_CACHE_ENABLED: bool = True
 
     # Confidence Thresholds
@@ -74,7 +75,7 @@ class Settings(BaseSettings):
     TIMESCALE_URL: str = ""  # Set in .env if using TimescaleDB
 
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
 
     class Config:
         env_file = ".env"

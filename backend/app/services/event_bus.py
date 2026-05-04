@@ -10,6 +10,7 @@ import hashlib
 import json
 import uuid
 import logging
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class EventType(str, Enum):
 
 class WebhookSubscription:
     def __init__(self, endpoint: str, events: List[EventType], secret: str = None,
-                 tenant_id: str = "tenant_acme", name: str = "default"):
+                 tenant_id: str = "default", name: str = "default"):
         self.id = str(uuid.uuid4())
         self.endpoint = endpoint
         self.events = events
@@ -64,7 +65,7 @@ class EventBus:
         return cls._instance
 
     def subscribe(self, endpoint: str, events: List[EventType],
-                  secret: str = None, tenant_id: str = "tenant_acme", name: str = "default") -> WebhookSubscription:
+                  secret: str = None, tenant_id: str = "default", name: str = "default") -> WebhookSubscription:
         sub = WebhookSubscription(endpoint, events, secret, tenant_id, name)
         self._subscriptions.append(sub)
         logger.info(f"[EventBus] New subscription: {name} → {endpoint} for {len(events)} events")
@@ -90,7 +91,7 @@ class EventBus:
         ]
 
     async def emit(self, event_type: EventType, payload: Dict[str, Any],
-                   tenant_id: str = "tenant_acme"):
+                   tenant_id: str = "default"):
         """Emit an event to all matching subscribers."""
         event = {
             "id": str(uuid.uuid4()),
@@ -109,20 +110,28 @@ class EventBus:
         matching = [s for s in self._subscriptions
                     if s.active and event_type in s.events and s.tenant_id == tenant_id]
 
-        for sub in matching:
-            try:
-                # Sign payload
-                signature = hashlib.sha256(
-                    f"{sub.secret}|{json.dumps(event, sort_keys=True, default=str)}".encode()
-                ).hexdigest()
+        async with httpx.AsyncClient() as client:
+            for sub in matching:
+                try:
+                    # Sign payload
+                    signature = hashlib.sha256(
+                        f"{sub.secret}|{json.dumps(event, sort_keys=True, default=str)}".encode()
+                    ).hexdigest()
 
-                # In production: httpx.AsyncClient().post(sub.endpoint, json=event, headers={"X-Knowtique-Signature": signature})
-                logger.info(f"[EventBus] Delivered {event_type.value} → {sub.endpoint}")
-                sub.delivery_count += 1
-                sub.last_delivered_at = datetime.now(timezone.utc)
-            except Exception as e:
-                sub.failure_count += 1
-                logger.warning(f"[EventBus] Delivery failed to {sub.endpoint}: {e}")
+                    res = await client.post(
+                        sub.endpoint,
+                        json=event,
+                        headers={"X-Knowtique-Signature": signature},
+                        timeout=5.0
+                    )
+                    res.raise_for_status()
+
+                    logger.info(f"[EventBus] Delivered {event_type.value} → {sub.endpoint}")
+                    sub.delivery_count += 1
+                    sub.last_delivered_at = datetime.now(timezone.utc)
+                except Exception as e:
+                    sub.failure_count += 1
+                    logger.warning(f"[EventBus] Delivery failed to {sub.endpoint}: {e}")
 
         return event
 

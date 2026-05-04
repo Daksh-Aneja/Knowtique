@@ -38,8 +38,8 @@ async def ingest_regulation(payload: RegulationPayload, db: AsyncSession = Depen
         
         return result
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        import logging
+        logging.getLogger(__name__).error(f"Regulation ingestion failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 from sqlalchemy import select

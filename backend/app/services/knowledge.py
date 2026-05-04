@@ -70,13 +70,18 @@ class PolystoreEngine:
     def __init__(self, llm: Optional[LLMRouter] = None):
         self.llm = llm or LLMRouter()
 
-    async def write_knowledge(self, rule: Rule, tenant_id: str) -> PolyWriteResult:
+    async def write_knowledge(
+        self, rule: Rule, tenant_id: str, db: Optional[AsyncSession] = None
+    ) -> PolyWriteResult:
         """
         Write a Rule object across all configured stores.
 
         Args:
             rule: A mapped SQLAlchemy Rule ORM instance (not a dict).
             tenant_id: The tenant this rule belongs to.
+            db: Optional caller session. If provided, the relational write
+                uses this session directly (avoids cross-session merge issues).
+                If None, opens a fresh session internally.
 
         Returns:
             PolyWriteResult with per-store success flags.
@@ -85,11 +90,15 @@ class PolystoreEngine:
 
         # ── Store 1: Relational (PostgreSQL / SQLite) ─────────────────────
         try:
-            async with AsyncSessionLocal() as session:
-                # Merge: handles both INSERT (new) and UPDATE (re-write)
-                merged = await session.merge(rule)
-                await session.commit()
-                await session.refresh(merged)
+            if db is not None:
+                # Use caller's session — rule is already attached here
+                await db.flush()
+            else:
+                # Open a fresh session — merge by ID to avoid DetachedInstanceError
+                async with AsyncSessionLocal() as session:
+                    merged = await session.merge(rule)
+                    await session.commit()
+                    await session.refresh(merged)
             result.relational = True
             logger.info(f"[Polystore] Relational write OK: {rule.id}")
         except Exception as exc:

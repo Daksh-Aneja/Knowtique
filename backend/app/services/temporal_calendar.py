@@ -2,7 +2,7 @@
 Enterprise calendar awareness: deadlines, seasonality, anomaly detection.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import select, and_
@@ -29,7 +29,7 @@ class TemporalReasoningEngine:
         
         Returns: { multiplier: float, active_events: [...], context: str }
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         window_end = now + timedelta(days=30)
 
         async with AsyncSessionLocal() as session:
@@ -106,7 +106,7 @@ class TemporalReasoningEngine:
         
         Returns anomaly dict if detected, None if normal.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         async with AsyncSessionLocal() as session:
             # Check for blocking events (e.g., release freeze)
@@ -152,7 +152,7 @@ class TemporalReasoningEngine:
         
         Used by BlueprintGenerator to add temporal awareness to agent DAGs.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         async with AsyncSessionLocal() as session:
             query = select(EnterpriseCalendar).where(

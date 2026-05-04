@@ -32,8 +32,16 @@ async def get_cross_org_benchmark(db: AsyncSession = Depends(get_db)):
     
     try:
         res = await llm.complete(prompt=prompt, model_tier="classification")
-        benchmarks = json.loads(res) if isinstance(res, str) else json.loads(res.get("content", "{}"))
-    except Exception:
+        if isinstance(res, dict):
+            content = res.get("content", "{}")
+            benchmarks = json.loads(content) if isinstance(content, str) else content
+        elif isinstance(res, str):
+            benchmarks = json.loads(res)
+        else:
+            benchmarks = {}
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Benchmark LLM fallback triggered: {e}")
         benchmarks = {
             "industry_median": {"kb_coverage_pct": 78, "agent_autonomy_pct": 43, "time_to_onboard_days": 45, "active_skills": 15},
             "top_quartile": {"kb_coverage_pct": 92, "agent_autonomy_pct": 81, "time_to_onboard_days": 3, "active_skills": 42},
@@ -80,7 +88,13 @@ async def generate_intelligence_report(db: AsyncSession = Depends(get_db)):
 
     try:
         res = await llm.complete(prompt=prompt, model_tier="reasoning")
-        report = json.loads(res) if isinstance(res, str) else json.loads(res.get("content", "{}"))
+        if isinstance(res, dict):
+            content = res.get("content", "{}")
+            report = json.loads(content) if isinstance(content, str) else content
+        elif isinstance(res, str):
+            report = json.loads(res)
+        else:
+            report = {}
     except Exception as e:
         report = {
             "executive_summary": f"Report generation pending: {str(e)[:80]}",

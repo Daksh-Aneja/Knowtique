@@ -1,11 +1,12 @@
 """AEOS Pioneer Layer API Routes
 P1 External Intelligence + P2 Org Intelligence + L6 Simulation
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from app.services.external_intelligence import ExternalIntelligenceEngine
 from app.services.org_intelligence import OrgIntelligenceEngine
+from app.core.tenant import get_tenant_id
 
 router = APIRouter(tags=["AEOS Pioneer Layers"])
 
@@ -27,23 +28,24 @@ class CorrelateRequest(BaseModel):
 
 
 @router.post("/intelligence/signals")
-async def ingest_signal(req: SignalIngestRequest):
+async def ingest_signal(req: SignalIngestRequest, tenant_id: str = Depends(get_tenant_id)):
     """P1 — Ingest an external signal (regulatory, vendor, market, threat)."""
     if req.signal_type not in ext_intel.SIGNAL_TYPES:
         raise HTTPException(400, f"Invalid signal_type. Must be one of: {ext_intel.SIGNAL_TYPES}")
     return await ext_intel.ingest_signal(
-        req.signal_type, req.source, req.title, req.content, req.severity
+        req.signal_type, req.source, req.title, req.content, req.severity,
+        tenant_id=tenant_id
     )
 
 @router.post("/intelligence/correlate")
-async def correlate_signal(req: CorrelateRequest):
+async def correlate_signal(req: CorrelateRequest, tenant_id: str = Depends(get_tenant_id)):
     """P1 — Correlate an external signal with the Company Brain."""
-    return await ext_intel.correlate_with_brain(req.signal_content)
+    return await ext_intel.correlate_with_brain(req.signal_content, tenant_id=tenant_id)
 
 @router.post("/intelligence/proactive-alert")
-async def generate_proactive_alert(req: SignalIngestRequest):
+async def generate_proactive_alert(req: SignalIngestRequest, tenant_id: str = Depends(get_tenant_id)):
     """P1 — Generate proactive alert from external signal."""
-    return await ext_intel.generate_proactive_alert(req.signal_type, req.content)
+    return await ext_intel.generate_proactive_alert(req.signal_type, req.content, tenant_id=tenant_id)
 
 
 # ─── P2: Org Intelligence ───
@@ -58,19 +60,19 @@ class InfluencePathRequest(BaseModel):
 
 
 @router.post("/org-intelligence/change-readiness")
-async def score_change_readiness(req: ChangeReadinessRequest):
+async def score_change_readiness(req: ChangeReadinessRequest, tenant_id: str = Depends(get_tenant_id)):
     """P2 — Score change readiness for a department."""
-    return await org_intel.score_change_readiness(req.department, req.change_description)
+    return await org_intel.score_change_readiness(req.department, req.change_description, tenant_id=tenant_id)
 
 @router.post("/org-intelligence/influence-path")
-async def map_influence_path(req: InfluencePathRequest):
+async def map_influence_path(req: InfluencePathRequest, tenant_id: str = Depends(get_tenant_id)):
     """P2 — Plan optimal stakeholder engagement path."""
-    return await org_intel.map_influence_path(req.target_outcome, req.department)
+    return await org_intel.map_influence_path(req.target_outcome, req.department, tenant_id=tenant_id)
 
 @router.get("/org-intelligence/skills-topology")
-async def get_skills_topology():
+async def get_skills_topology(tenant_id: str = Depends(get_tenant_id)):
     """P2 — Get skills topology map across departments."""
-    return await org_intel.get_skills_topology()
+    return await org_intel.get_skills_topology(tenant_id=tenant_id)
 
 
 # ─── L6: Simulation ───

@@ -4,10 +4,21 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import get_settings
 from app.models.domain import Base
 # Import all model modules to register their tables with Base.metadata
-import app.models.settings  # noqa: F401
-import app.models.agent_factory  # noqa: F401 — AEOS Agent Factory models
-import app.models.fairness  # noqa: F401 — AEOS P3 Ethical AI models
-import app.models.calendar  # noqa: F401 — AEOS P4 Temporal Calendar models
+# Wrapped in try/except so a broken subsystem doesn't crash the entire DB init
+import logging as _logging
+_db_logger = _logging.getLogger(__name__)
+
+_model_modules = [
+    "app.models.settings",
+    "app.models.agent_factory",
+    "app.models.fairness",
+    "app.models.calendar",
+]
+for _mod in _model_modules:
+    try:
+        __import__(_mod)
+    except Exception as _exc:
+        _db_logger.warning(f"[Database] Could not import {_mod}: {_exc}. Tables from this module will not be created.")
 
 settings = get_settings()
 

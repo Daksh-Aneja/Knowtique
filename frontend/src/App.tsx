@@ -36,6 +36,9 @@ const Knowtique10X = lazy(() => import('./pages/Knowtique10X'));
 const LLMRoutingSettings = lazy(() => import('./pages/LLMRoutingSettings'));
 const MCPToolManager = lazy(() => import('./pages/MCPToolManager'));
 const FederatedSettings = lazy(() => import('./pages/FederatedSettings'));
+const OntologyConfig = lazy(() => import('./pages/OntologyConfig'));
+const ElicitationSimulator = lazy(() => import('./pages/ElicitationSimulator'));
+const EnterpriseCommandCenter = lazy(() => import('./pages/EnterpriseCommandCenter'));
 
 type NavItem = { id: string; label: string; icon: any; children?: NavItem[] };
 
@@ -68,7 +71,10 @@ const LAYERS: NavItem[] = [
   { id: '10x', label: '10X Capabilities', icon: Zap },
   { id: 'llm_routing', label: 'LLM Routing', icon: Workflow },
   { id: 'mcp_tools', label: 'MCP Tools', icon: Database },
+  { id: 'ontology', label: 'Ontology & Decay', icon: Network },
   { id: 'federated', label: 'Federated Learning', icon: Globe },
+  { id: 'elicitation_sim', label: 'Elicitation Sim', icon: FileSearch },
+  { id: 'enterprise', label: 'Enterprise Ops', icon: LayoutDashboard },
 ];
 
 function NavButton({ item, active, onClick, colors }: { item: NavItem; active: boolean; onClick: () => void; colors: any }) {
@@ -120,6 +126,9 @@ function Shell() {
       case 'llm_routing': return <ThemeAdapter><LLMRoutingSettings /></ThemeAdapter>;
       case 'mcp_tools': return <ThemeAdapter><MCPToolManager /></ThemeAdapter>;
       case 'federated': return <ThemeAdapter><FederatedSettings /></ThemeAdapter>;
+      case 'ontology': return <ThemeAdapter><OntologyConfig /></ThemeAdapter>;
+      case 'elicitation_sim': return <ThemeAdapter><ElicitationSimulator /></ThemeAdapter>;
+      case 'enterprise': return <ThemeAdapter><EnterpriseCommandCenter /></ThemeAdapter>;
       default: return <CommandCenter />;
     }
   };

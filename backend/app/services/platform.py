@@ -34,7 +34,7 @@ class ExplainabilityEngine:
 class ConflictResolutionArena:
     """L16 - Real-Time Collaboration & Conflict Resolution Arena"""
     
-    async def open_conflict_arena(self, rule_a_id: str, rule_b_id: str) -> str:
+    async def open_conflict_arena(self, rule_a_id: str, rule_b_id: str, tenant_id: str = "default") -> str:
         """Opens a structured async debate workspace for conflicting rules."""
         from app.core.database import AsyncSessionLocal
         from app.models.domain import ConflictCase
@@ -43,7 +43,7 @@ class ConflictResolutionArena:
             arena_id = str(uuid.uuid4())
             conflict = ConflictCase(
                 id=arena_id,
-                tenant_id="tenant_acme",
+                tenant_id=tenant_id,
                 rule_a_id=rule_a_id,
                 rule_b_id=rule_b_id,
                 conflict_type="DETECTED_BY_ENGINE",

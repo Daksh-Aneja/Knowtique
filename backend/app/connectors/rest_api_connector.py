@@ -26,7 +26,8 @@ class RESTAPIConnector(BaseConnector):
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.get(base_url, headers=self._build_headers())
                 return resp.status_code < 500
-        except Exception:
+        except Exception as e:
+            logger.warning(f"REST connector auth failed for {base_url}: {e}")
             return False
 
     async def health_check(self) -> dict:

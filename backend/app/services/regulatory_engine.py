@@ -28,7 +28,7 @@ class RegulatoryEngine:
     """
 
     @staticmethod
-    async def ingest_new_regulation(db: AsyncSession, update: RegulatoryUpdate) -> Dict[str, any]:
+    async def ingest_new_regulation(db: AsyncSession, update: RegulatoryUpdate, tenant_id: str = "default") -> Dict[str, any]:
         """
         Parses a new legal directive, evaluates required actions using the LLM, 
         and autonomously submits new absolute compliance rules to the Polystore.
@@ -50,13 +50,14 @@ class RegulatoryEngine:
         
         new_rules_generated = []
         try:
-            res = await router.complete(prompt=prompt, model="gpt-4o-mini")
-            analysis = json.loads(res.get("content", "{}"))
+            res = await router.complete(prompt=prompt, model_tier="fast")
+            content = res if isinstance(res, str) else res.get("content", "{}")
+            analysis = json.loads(content) if isinstance(content, str) else content
             
             if "statement" in analysis and "domain" in analysis:
                 new_rule = Rule(
                     id=str(uuid.uuid4()),
-                    tenant_id="tenant_acme",
+                    tenant_id=tenant_id,
                     statement=analysis["statement"],
                     trigger_json={"condition": analysis.get("trigger_condition", "always")},
                     action_json={"action": analysis.get("action", "enforce_compliance")},

@@ -8,6 +8,10 @@ from app.models.domain import Skill, SkillExecution, Employee, ElicitationQuesti
 
 from app.core.database import AsyncSessionLocal
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class EvolutionEngine:
     """
     Handles the L10 feedback loop. When an agent fails, it autonomously 
@@ -36,7 +40,7 @@ class EvolutionEngine:
                 expert = any_emp_q.scalar_one_or_none()
                 
             if not expert:
-                print(f"[EvolutionEngine] No employees found to handle failure for {skill_id}")
+                logger.warning(f"No employees found to handle failure for {skill_id}")
                 return
                 
             # 2. Generate the Elicitation Question text
@@ -65,4 +69,4 @@ class EvolutionEngine:
             
             db.add(eq)
             await db.commit()
-            print(f"[EvolutionEngine] Autonomously generated ElicitationQuestion for {expert.display_name} regarding {skill_id} failure.")
+            logger.info(f"Autonomously generated ElicitationQuestion for {expert.display_name} regarding {skill_id} failure.")

@@ -57,10 +57,11 @@ async def generate_ambient_ui(request: UIRequest):
     
     response = await router.complete(
         prompt=prompt,
-        model="gpt-4o-mini",
+        model_tier="fast",
     )
     
-    jsx_content = response.get("content", "").replace("```jsx", "").replace("```", "").strip()
+    content = response if isinstance(response, str) else response.get("content", "")
+    jsx_content = content.replace("```jsx", "").replace("```", "").strip()
     
     return {
         "status": "success",

@@ -4,7 +4,7 @@ EU AI Act Article 13 + GDPR Article 22 compliant.
 """
 import logging, json
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
@@ -139,7 +139,7 @@ class FairnessEngine:
             log.was_overridden = True
             log.override_by = override_by
             log.override_justification = justification
-            log.override_at = datetime.utcnow()
+            log.override_at = datetime.now(timezone.utc)
             await session.commit()
 
             logger.warning(f"[Fairness] OVERRIDE: log={log_id} by={override_by}")

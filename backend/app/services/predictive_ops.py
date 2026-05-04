@@ -64,9 +64,10 @@ class PredictiveOpsEngine:
         
         try:
             router = LLMRouter()
-            res = await router.complete(prompt=prompt, model="gpt-4o-mini")
+            res = await router.complete(prompt=prompt, model_tier="fast")
             import json
-            analysis = json.loads(res.get("content", "{}"))
+            content = res if isinstance(res, str) else res.get("content", "{}")
+            analysis = json.loads(content) if isinstance(content, str) else content
             
             if analysis.get("requires_action") and analysis.get("recommended_skill_id") in available_skills:
                 return LatentIntent(

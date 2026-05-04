@@ -19,8 +19,9 @@ class BenchmarkEngine:
         )
         
         try:
-            res = await router.complete(prompt=prompt, model="gpt-4o-mini")
-            data = json.loads(res.get("content", "{}"))
+            res = await router.complete(prompt=prompt, model_tier="fast")
+            content = res if isinstance(res, str) else res.get("content", "{}")
+            data = json.loads(content) if isinstance(content, str) else content
             
             return {
                 "department": department,

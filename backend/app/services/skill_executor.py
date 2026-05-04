@@ -365,7 +365,9 @@ def _safe_parse_json(raw: str) -> dict:
     try:
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         return json.loads(clean)
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"LLM response parse failed: {e}")
         return {"status": "FAILED", "error": f"Could not parse LLM response: {raw[:200]}"}
 
 

@@ -54,6 +54,9 @@ _DEV_TENANT = {
     "name": "dev_user",
 }
 
+# Role hierarchy — used by require_role() dependency
+ROLE_HIERARCHY = {"viewer": 0, "operator": 1, "admin": 2}
+
 
 class TenantMiddleware(BaseHTTPMiddleware):
     """
@@ -168,8 +171,6 @@ def require_role(required_role: str):
 
     Returns the full tenant dict so the route can still use tenant_id.
     """
-    ROLE_HIERARCHY = {"viewer": 0, "operator": 1, "admin": 2}
-
     def _checker(tenant: dict = Depends(get_tenant)) -> dict:
         caller_level = ROLE_HIERARCHY.get(tenant.get("role", "viewer"), 0)
         required_level = ROLE_HIERARCHY.get(required_role, 99)

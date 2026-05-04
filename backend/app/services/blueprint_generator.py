@@ -2,6 +2,7 @@
 Takes natural language prompt → queries Company Brain → generates visual DAG blueprint.
 """
 import logging, json
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select, func as sqlfunc
@@ -122,7 +123,7 @@ class BlueprintGenerator:
 
             blueprint.status = BlueprintStatus.APPROVED
             blueprint.approved_by = approved_by
-            blueprint.approved_at = datetime.utcnow()
+            blueprint.approved_at = datetime.now(timezone.utc)
             await session.commit()
             await session.refresh(blueprint)
             return self._serialize(blueprint)
@@ -275,7 +276,7 @@ Respond in JSON: {{"nodes":[{{"id":"node_1","type":"DATA_SOURCE","label":"...","
         except json.JSONDecodeError:
             try:
                 return json.loads(response[response.index("{"):response.rindex("}") + 1])
-            except:
+            except (ValueError, json.JSONDecodeError):
                 return {}
 
     def _serialize(self, bp: AgentBlueprint) -> dict:

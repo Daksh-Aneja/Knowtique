@@ -37,6 +37,9 @@ async def lifespan(app: FastAPI):
             logger.info("Database seeded with Knowtique demo data")
         else:
             logger.info("Database already contains data, skipping seed")
+
+        from app.core.auth import initialize_dev_mode
+        initialize_dev_mode()
     yield
     # Shutdown cleanup (close connection pools etc.) goes here if needed
 
@@ -53,7 +56,7 @@ app = FastAPI(
 # CORS must be outermost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    allow_origins=settings.CORS_ORIGINS if hasattr(settings, "CORS_ORIGINS") else ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -101,13 +104,19 @@ async def health():
 # These are intentionally NOT behind TenantMiddleware auth (bootstrap scenario).
 # In production, secure these behind network-level ACLs or a separate admin service.
 
+from fastapi import HTTPException, Header
+
 @app.post("/admin/api-keys", include_in_schema=False)
-async def create_api_key(tenant_id: str, name: str, role: str = "operator"):
+async def create_api_key(tenant_id: str, name: str, role: str = "operator", x_admin_secret: str = Header(None)):
     """
     Bootstrap: create an API key for a tenant.
     Call this once per tenant on first deploy.
     Protect this endpoint in production via network ACL or remove after bootstrap.
     """
+    admin_secret = getattr(settings, "ADMIN_SECRET", "dev_secret")
+    if x_admin_secret != admin_secret:
+        raise HTTPException(status_code=403, detail="Invalid admin secret")
+
     from app.core.auth import generate_api_key
     key_data = generate_api_key(tenant_id=tenant_id, name=name, role=role)
     logger.info(f"[Admin] API key created for tenant={tenant_id} role={role}")
@@ -115,11 +124,14 @@ async def create_api_key(tenant_id: str, name: str, role: str = "operator"):
 
 
 @app.delete("/admin/api-keys/{key_prefix}", include_in_schema=False)
-async def revoke_api_key(key_prefix: str):
+async def revoke_api_key(key_prefix: str, x_admin_secret: str = Header(None)):
     """Revoke an API key by its first 12 characters."""
+    admin_secret = getattr(settings, "ADMIN_SECRET", "dev_secret")
+    if x_admin_secret != admin_secret:
+        raise HTTPException(status_code=403, detail="Invalid admin secret")
+
     from app.core.auth import revoke_api_key as _revoke
     revoked = _revoke(key_prefix)
     if not revoked:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Key not found")
     return {"status": "revoked", "key_prefix": key_prefix}

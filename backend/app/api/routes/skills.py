@@ -74,11 +74,14 @@ async def get_skill(skill_id: str, db: AsyncSession = Depends(get_db)):
     return SkillDetail.model_validate(skill.__dict__)
 
 
+from app.core.tenant import get_tenant_id
+
 @router.post("/{skill_id}/execute", response_model=SkillExecutionResponse)
 async def execute_skill(
     skill_id: str,
     body: SkillExecutionRequest,
     background_tasks: BackgroundTasks,
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Execute a skill — full L9 pipeline: route → execute → report to L10."""
@@ -126,101 +129,59 @@ async def execute_skill(
 
     # 3. Confidence gate — HITL check
     hitl_required = skill.confidence < 0.82
-    reasoning_chain = []
-
-    # 4. Actual Generative Skill Execution & Reasoning
-    steps = skill.steps or []
-    from app.services.llm_router import LLMRouter
-    import json
-    router = LLMRouter()
-    
-    execution_prompt = (
-        f"You are the Knowtique Execution Engine. Evaluate the following skill steps given the context and determine if it succeeds.\n"
-        f"Context: {body.context}\n"
-        f"Steps: {json.dumps(steps)}\n"
-        f"Output ONLY valid JSON: {{\"success\": bool, \"reasoning_chain\": [{{\"step\": int, \"action\": str, \"confidence\": float, \"status\": \"EXECUTED\"|\"FAILED\"}}]}}"
-    )
-    
-    try:
-        res = await router.complete(prompt=execution_prompt, model="gpt-4o-mini")
-        result_data = json.loads(res.get("content", "{}"))
-        success = result_data.get("success", False)
-        reasoning_chain = result_data.get("reasoning_chain", [])
-    except Exception:
-        success = False
-        reasoning_chain = [{"step": 1, "action": "Fallback Execution", "confidence": 0.0, "status": "FAILED", "path": "SKILL_EXEC"}]
-
-    # 5. Determine outcome
-    status = "SUCCESS_CLEAN" if success else "FAILED_RULE_MISMATCH"
-    end = datetime.now(timezone.utc)
-    duration_ms = int((end - start).total_seconds() * 1000)
-
-    # 6. Write execution record (L10 feedback)
-    execution = SkillExecution(
-        id=exec_id,
-        skill_db_id=skill.id,
-        skill_id_name=skill.skill_id,
-        tenant_id=skill.tenant_id,
-        status=status,
-        route_type="SKILL_EXEC",
-        agent_state="COMPLETED",
-        task_intent=body.intent,
-        context=body.context,
-        reasoning_chain=reasoning_chain,
-        started_at=start,
-        completed_at=end if not hitl_required else None,
-        duration_ms=duration_ms,
-        hitl_required=hitl_required,
-        hitl_approved=True if not hitl_required else None,
-        outcome_type=status if not hitl_required else "PENDING_HITL",
-        confidence_delta=0.02 if success else -0.05,
-    )
     if hitl_required:
-        execution.status = "PENDING_HITL"
-        execution.agent_state = "PAUSED"
-    
-    db.add(execution)
-
-    # 7. Update skill stats (L10 feedback loop)
-    skill.execution_count += 1
-    total = skill.execution_count
-    old_sr = skill.success_rate
-    skill.success_rate = round(
-        ((old_sr * (total - 1)) + (1.0 if success else 0.0)) / total, 4
-    )
-
-    # 8. Bayesian confidence update
-    evidence = "AGENT_SUCCESS" if success else "AGENT_FAILURE"
-    new_conf = confidence_engine.bayesian_update(skill.confidence, evidence)
-    skill.confidence = round(new_conf, 4)
-
-    # 9. L10 Feedback Loop: Process outcome
-    feedback_result = await feedback_engine.process_agent_outcome({
-        "status": status, "rule_id": skill.skill_id
-    })
-
-    # 10. L10 Evolution Loop: Trigger elicitation on failure
-    if not success:
-        background_tasks.add_task(
-            EvolutionEngine.handle_agent_failure, 
-            exec_id, 
-            body.intent, 
-            body.context, 
-            skill.skill_id, 
-            skill.department, 
-            skill.tenant_id
+        execution = SkillExecution(
+            id=exec_id,
+            skill_db_id=skill.id,
+            skill_id_name=skill.skill_id,
+            tenant_id=skill.tenant_id,
+            status="PENDING_HITL",
+            route_type="SKILL_EXEC",
+            agent_state="PAUSED",
+            task_intent=body.intent,
+            context=body.context,
+            reasoning_chain=[],
+            started_at=start,
+            duration_ms=0,
+            hitl_required=True,
+            outcome_type="PENDING_HITL",
+        )
+        db.add(execution)
+        await db.commit()
+        return SkillExecutionResponse(
+            execution_id=exec_id, skill_id=skill.skill_id, status="PENDING_HITL",
+            route_type="SKILL_EXEC", duration_ms=0, hitl_required=True
         )
 
-    await db.commit()
+    # 4. Actual Generative Skill Execution & Reasoning
+    from app.services.skill_executor import SkillExecutionEngine
+    exec_engine = SkillExecutionEngine()
+    
+    # Pass dict representation to run
+    skill_dict = skill.__dict__.copy()
+    skill_dict["skill_id"] = skill.skill_id
+    
+    exec_result = await exec_engine.run(
+        skill=skill_dict,
+        context=body.context or {},
+        execution_id=exec_id,
+        tenant_id=skill.tenant_id,
+        skill_obj=skill
+    )
+
+    # 5. Feedback Loop
+    await feedback_engine.process_agent_outcome({
+        "status": exec_result["status"], "rule_id": skill.skill_id
+    })
 
     return SkillExecutionResponse(
         execution_id=exec_id,
         skill_id=skill.skill_id,
-        status=status,
+        status=exec_result["status"],
         route_type="SKILL_EXEC",
-        reasoning_chain=reasoning_chain,
-        duration_ms=duration_ms,
-        hitl_required=hitl_required,
+        reasoning_chain=exec_result["reasoning_chain"],
+        duration_ms=exec_result["duration_ms"],
+        hitl_required=False,
     )
 
 
@@ -303,7 +264,7 @@ async def approve_hitl(exec_id: str, db: AsyncSession = Depends(get_db)):
     return {"status": "SUCCESS", "execution_id": exec_id}
 
 @router.post("/hitl/{exec_id}/reject")
-async def reject_hitl(exec_id: str, db: AsyncSession = Depends(get_db)):
+async def reject_hitl(exec_id: str, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     """L9 - Reject a pending HITL execution."""
     result = await db.execute(select(SkillExecution).where(SkillExecution.id == exec_id))
     execution = result.scalar_one_or_none()
@@ -327,13 +288,11 @@ async def reject_hitl(exec_id: str, db: AsyncSession = Depends(get_db)):
 
     # L10: Trigger elicitation on human override
     from app.services.evolution import EvolutionEngine
-    import asyncio
-    asyncio.create_task(
-        EvolutionEngine.handle_agent_failure(
-            exec_id, execution.task_intent or "",
-            execution.context or {}, execution.skill_id_name or "",
-            "unknown", execution.tenant_id
-        )
+    background_tasks.add_task(
+        EvolutionEngine.handle_agent_failure,
+        exec_id, execution.task_intent or "",
+        execution.context or {}, execution.skill_id_name or "",
+        "unknown", execution.tenant_id
     )
 
     await db.commit()
@@ -348,7 +307,7 @@ class CompileRequest(BaseModel):
 
 
 @router.post("/compile")
-async def compile_skill(body: CompileRequest, db: AsyncSession = Depends(get_db)):
+async def compile_skill(body: CompileRequest, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """L8 — Compile rules from a workflow into a SKILL.md agent contract."""
     from app.services.compiler import SkillsCompiler
     from app.models.domain import Rule
@@ -374,7 +333,7 @@ async def compile_skill(body: CompileRequest, db: AsyncSession = Depends(get_db)
     # Persist as new Skill
     new_skill = Skill(
         id=str(uuid.uuid4()), skill_id=contract["skill_id"],
-        tenant_id="tenant_acme", department=body.domain, domain=body.domain,
+        tenant_id=tenant_id, department=body.domain, domain=body.domain,
         version=contract["version"], confidence=contract["confidence"],
         triggers=[], steps=contract["steps"],
         mcp_tool_bindings=contract["mcp_tool_bindings"],

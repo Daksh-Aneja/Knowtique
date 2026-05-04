@@ -30,7 +30,7 @@ async def readiness(db: AsyncSession = Depends(get_db)):
     try:
         await db.execute(text("SELECT 1"))
         db_ok = True
-    except:
+    except Exception:
         db_ok = False
     return {
         "status": "ready" if db_ok else "not_ready",
@@ -183,8 +183,10 @@ async def export_skills(db: AsyncSession = Depends(get_db)):
 class BulkRuleImport(BaseModel):
     rules: List[dict]
 
+from app.core.tenant import get_tenant_id
+
 @router.post("/import/rules")
-async def import_rules(body: BulkRuleImport, db: AsyncSession = Depends(get_db)):
+async def import_rules(body: BulkRuleImport, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """Bulk import rules from JSON array."""
     from app.services.confidence import ConfidenceEngine
     ce = ConfidenceEngine()
@@ -194,7 +196,7 @@ async def import_rules(body: BulkRuleImport, db: AsyncSession = Depends(get_db))
                   "outcome_validation": 0.5, "explicit_validation": 0.0}
         scalar = ce.calculate_scalar(vector)
         rule = Rule(
-            id=str(uuid.uuid4()), tenant_id=rd.get("tenant_id", "tenant_acme"),
+            id=str(uuid.uuid4()), tenant_id=tenant_id,
             statement=rd.get("statement", ""), domain=rd.get("domain", "general"),
             workflow_id=rd.get("workflow_id"), confidence_vector=vector,
             confidence_scalar=scalar, confidence_tier="INFERRED",

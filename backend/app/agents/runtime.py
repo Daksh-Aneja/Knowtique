@@ -52,6 +52,7 @@ class AgentExecutor:
         self._debate_engine = None
         self._fairness_engine = None
         self._activity_feed = None
+        self._exec_engine = None
 
     @property
     def debate_engine(self):
@@ -73,6 +74,13 @@ class AgentExecutor:
             from app.services.activity_feed import ActivityFeedService
             self._activity_feed = ActivityFeedService()
         return self._activity_feed
+
+    @property
+    def exec_engine(self):
+        if self._exec_engine is None:
+            from app.services.skill_executor import SkillExecutionEngine
+            self._exec_engine = SkillExecutionEngine()
+        return self._exec_engine
 
     async def execute_skill(
         self, skill: Dict[str, Any], context: Dict[str, Any]
@@ -171,14 +179,12 @@ class AgentExecutor:
 
         # ── Gate 5: Generative Skill Execution ──────────────────────────
         import uuid
-        from app.services.skill_executor import SkillExecutionEngine
 
         exec_id = context.get("execution_id", f"exec-{uuid.uuid4().hex[:8]}")
         context["execution_id"] = exec_id
         context["tenant_id"] = context.get("tenant_id", "default")
 
-        exec_engine = SkillExecutionEngine()
-        exec_result = await exec_engine.run(
+        exec_result = await self.exec_engine.run(
             skill=skill,
             context=context,
             execution_id=exec_id,

@@ -14,13 +14,11 @@ async def export_skill_to_swarm(skill_id: str, db: AsyncSession = Depends(get_db
     using Zero-Knowledge abstraction.
     """
     try:
-        weight = await FederatedEngine.export_skill_to_swarm(db, skill_id)
+        ledger_receipt = await FederatedEngine.export_skill_to_swarm(db, skill_id)
         return {
             "status": "EXPORTED",
-            "global_id": weight.global_id,
-            "abstract_domain": weight.abstract_domain,
-            "procedural_hash": weight.procedural_hash,
-            "success_weight": weight.success_weight
+            "skill_id": skill_id,
+            "ledger_receipt": ledger_receipt,
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -20,8 +20,9 @@ class ContradictionDetector:
                 )
                 
                 try:
-                    res = await router.complete(prompt=prompt, model="gpt-4o-mini")
-                    analysis = json.loads(res.get("content", "{}"))
+                    res = await router.complete(prompt=prompt, model_tier="fast")
+                    content = res if isinstance(res, str) else res.get("content", "{}")
+                    analysis = json.loads(content) if isinstance(content, str) else content
                     if analysis.get("conflict"):
                         return {
                             "conflict": True,
@@ -56,9 +57,12 @@ class RuleMiner:
         )
         
         try:
-            res = await router.complete(prompt=prompt, model="gpt-4o")
-            rule_data = json.loads(res.get("content", "{}"))
+            res = await router.complete(prompt=prompt, model_tier="classification")
+            content = res if isinstance(res, str) else res.get("content", "{}")
+            rule_data = json.loads(content) if isinstance(content, str) else content
             rule_data["confidence_basis"] = f"{len(signal_cluster)} consistent instances"
             return rule_data
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"RuleMiner extraction failed: {e}")
             return None

@@ -3,7 +3,7 @@ Compiles AgentBlueprints into SKILL.md agent contracts and deploys agents.
 """
 import logging, yaml
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
@@ -87,7 +87,7 @@ class SkillsCompiler:
             
             # Create provenance entry
             import hashlib
-            chain_data = f"SKILL_COMPILED:{skill_id}:{blueprint.id}:{datetime.utcnow().isoformat()}"
+            chain_data = f"SKILL_COMPILED:{skill_id}:{blueprint.id}:{datetime.now(timezone.utc).isoformat()}"
             chain_hash = hashlib.sha256(chain_data.encode()).hexdigest()
 
             provenance = ProvenanceLedger(
@@ -144,7 +144,7 @@ class SkillsCompiler:
             session.add(agent)
 
             blueprint.status = BlueprintStatus.DEPLOYED
-            blueprint.deployed_at = datetime.utcnow()
+            blueprint.deployed_at = datetime.now(timezone.utc)
 
             # Emit activity event
             event = ActivityFeedEvent(
@@ -179,7 +179,7 @@ class SkillsCompiler:
                 raise ValueError(f"Agent {agent_id} not found")
 
             agent.status = AgentStatus.STOPPED
-            agent.stopped_at = datetime.utcnow()
+            agent.stopped_at = datetime.now(timezone.utc)
 
             event = ActivityFeedEvent(
                 tenant_id=tenant_id,
@@ -204,7 +204,7 @@ class SkillsCompiler:
                 raise ValueError(f"Agent {agent_id} not found")
 
             agent.status = AgentStatus.PAUSED
-            agent.paused_at = datetime.utcnow()
+            agent.paused_at = datetime.now(timezone.utc)
             await session.commit()
 
             return {"agent_id": agent.id, "status": "PAUSED"}

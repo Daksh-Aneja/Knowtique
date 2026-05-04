@@ -6,6 +6,7 @@ from typing import List
 
 from app.core.database import get_db
 from app.models.settings import LLMRoutingConfig, MCPToolConfig, OntologyConfig, FederatedConfig
+from app.core.tenant import get_tenant_id
 
 router = APIRouter(prefix="/config", tags=["Platform Config"])
 
@@ -23,7 +24,7 @@ async def get_llm_routing(db: AsyncSession = Depends(get_db)):
     return res.scalars().all()
 
 @router.post("/llm-routing", response_model=LLMConfigItem)
-async def update_llm_routing(item: LLMConfigItem, db: AsyncSession = Depends(get_db)):
+async def update_llm_routing(item: LLMConfigItem, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(LLMRoutingConfig).where(LLMRoutingConfig.layer == item.layer))
     db_item = res.scalar_one_or_none()
     if db_item:
@@ -32,7 +33,7 @@ async def update_llm_routing(item: LLMConfigItem, db: AsyncSession = Depends(get
         db_item.provider = item.provider
     else:
         db_item = LLMRoutingConfig(
-            tenant_id="default",
+            tenant_id=tenant_id,
             layer=item.layer,
             model_name=item.model_name,
             api_key=item.api_key,
@@ -57,7 +58,7 @@ async def get_mcp_tools(db: AsyncSession = Depends(get_db)):
     return res.scalars().all()
 
 @router.post("/mcp-tools", response_model=MCPToolItem)
-async def update_mcp_tool(item: MCPToolItem, db: AsyncSession = Depends(get_db)):
+async def update_mcp_tool(item: MCPToolItem, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(MCPToolConfig).where(MCPToolConfig.tool_id == item.tool_id))
     db_item = res.scalar_one_or_none()
     if db_item:
@@ -66,7 +67,7 @@ async def update_mcp_tool(item: MCPToolItem, db: AsyncSession = Depends(get_db))
         db_item.api_key = item.api_key
     else:
         db_item = MCPToolConfig(
-            tenant_id="default",
+            tenant_id=tenant_id,
             tool_id=item.tool_id,
             is_active=item.is_active,
             rate_limit_per_hour=item.rate_limit_per_hour,
@@ -89,14 +90,14 @@ async def get_ontology(db: AsyncSession = Depends(get_db)):
     return res.scalars().all()
 
 @router.post("/ontology", response_model=OntologyItem)
-async def update_ontology(item: OntologyItem, db: AsyncSession = Depends(get_db)):
+async def update_ontology(item: OntologyItem, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(OntologyConfig).where(OntologyConfig.department == item.department))
     db_item = res.scalar_one_or_none()
     if db_item:
         db_item.default_half_life_days = item.default_half_life_days
     else:
         db_item = OntologyConfig(
-            tenant_id="default",
+            tenant_id=tenant_id,
             department=item.department,
             default_half_life_days=item.default_half_life_days
         )
@@ -117,14 +118,14 @@ async def get_federated(db: AsyncSession = Depends(get_db)):
     return res.scalars().all()
 
 @router.post("/federated", response_model=FederatedItem)
-async def update_federated(item: FederatedItem, db: AsyncSession = Depends(get_db)):
+async def update_federated(item: FederatedItem, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(FederatedConfig).where(FederatedConfig.department == item.department))
     db_item = res.scalar_one_or_none()
     if db_item:
         db_item.opt_in = item.opt_in
     else:
         db_item = FederatedConfig(
-            tenant_id="default",
+            tenant_id=tenant_id,
             department=item.department,
             opt_in=item.opt_in
         )

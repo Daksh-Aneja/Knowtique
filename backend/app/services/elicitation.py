@@ -40,8 +40,8 @@ class ElicitationEngine:
         )
         
         try:
-            res = await router.complete(prompt=prompt, model="gpt-4o-mini")
-            question_text = res.get("content", "").strip()
+            res = await router.complete(prompt=prompt, model_tier="fast")
+            question_text = (res if isinstance(res, str) else res.get("content", "")).strip()
         except Exception as e:
             return {"status": "FAILED_LLM_GENERATION", "error": str(e)}
         
