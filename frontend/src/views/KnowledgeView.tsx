@@ -27,7 +27,7 @@ export default function KnowledgeView({ domain }: { domain: string }) {
   ];
 
   return (
-    <div className="h-full flex flex-col font-mono" style={{ background: colors.canvas, color: colors.ink }}>
+    <div className="h-full flex flex-col" style={{ background: colors.canvas, color: colors.ink }}>
       <div className="flex items-center gap-6 px-8 border-b overflow-x-auto no-scrollbar" style={{ borderColor: colors.hairline, background: colors.surface1, minHeight: '48px' }}>
         {tabs.map(tab => (
           <button

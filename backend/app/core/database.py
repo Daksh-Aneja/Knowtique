@@ -14,6 +14,7 @@ _model_modules = [
     "app.models.fairness",
     "app.models.calendar",
     "app.models.infrastructure",
+    "app.models.auth",
 ]
 for _mod in _model_modules:
     try:

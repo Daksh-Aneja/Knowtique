@@ -1,10 +1,14 @@
 import React, { useState, lazy, Suspense } from 'react';
 import {
   BrainCircuit, Bot, Activity, Search, Bell, Sun, Moon,
-  ChevronDown, Settings, Database, Workflow, Shield, MessageSquare
+  ChevronDown, Settings, Database, Workflow, Shield, MessageSquare, LogOut
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ThemeAdapter from './components/ThemeAdapter';
+
+// Pages
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // Core Views
 const KnowledgeView = lazy(() => import('./views/KnowledgeView'));
@@ -46,6 +50,7 @@ function NavButton({ item, active, onClick, colors }: { item: NavItem; active: b
 function Shell() {
   const [view, setView] = useState('knowledge');
   const { theme, toggle, colors } = useTheme();
+  const { user, logout, isAdmin } = useAuth();
   const [domain, setDomain] = useState('All Domains');
   const [domainOpen, setDomainOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -64,7 +69,7 @@ function Shell() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden font-mono" style={{ background: colors.surface1, color: colors.ink }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: colors.surface1, color: colors.ink, fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       {/* Sidebar */}
       <aside className="w-[240px] flex flex-col flex-shrink-0 border-r overflow-hidden" style={{ borderColor: colors.hairline, background: colors.canvas }}>
         <div className="h-14 flex items-center px-5 border-b flex-shrink-0" style={{ borderColor: colors.hairline }}>
@@ -73,8 +78,8 @@ function Shell() {
               <BrainCircuit className="w-4 h-4 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[16px] font-semibold tracking-tight" style={{ color: colors.ink, fontFamily: 'sans-serif' }}>KAEOS</span>
-              <span className="text-[9px] -mt-0.5" style={{ color: colors.inkSubtle }}>Epistemic Operating System</span>
+              <span className="text-[16px] font-semibold tracking-tight" style={{ color: colors.ink }}>KAEOS</span>
+              <span className="text-[9px] -mt-0.5 tracking-wide uppercase" style={{ color: colors.inkSubtle }}>Epistemic OS</span>
             </div>
           </div>
         </div>
@@ -90,25 +95,19 @@ function Shell() {
           ))}
         </div>
 
-        {/* Architecture Reference */}
-        <div className="px-4 py-3 border-t" style={{ borderColor: colors.hairline }}>
-          <div className="text-[9px] font-mono space-y-0.5" style={{ color: colors.inkSubtle }}>
-            <div>S0 Epistemic Brain</div>
-            <div>S1 Infrastructure</div>
-            <div>S2 Execution Engine</div>
-            <div>S3 Pioneer Intelligence</div>
-            <div>S4 Experience Layer</div>
-          </div>
-        </div>
-
         <div className="p-4 border-t flex-shrink-0" style={{ borderColor: colors.hairline }}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-surface3 flex items-center justify-center text-[12px] font-bold" style={{ color: colors.ink }}>AE</div>
-            <div className="flex flex-col flex-1">
-              <span className="text-[13px] font-medium" style={{ color: colors.ink }}>Admin</span>
-              <span className="text-[11px]" style={{ color: colors.inkTertiary }}>KAEOS Runtime</span>
+            <div className="w-8 h-8 rounded flex items-center justify-center text-[12px] font-bold"
+              style={{ background: colors.primary + '20', color: colors.primary }}>
+              {(user?.display_name || 'U').charAt(0).toUpperCase()}
             </div>
-            <Settings className="w-4 h-4 text-inkTertiary cursor-pointer hover:text-ink transition-colors" style={{ color: colors.inkTertiary }} />
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-[13px] font-medium truncate" style={{ color: colors.ink }}>{user?.display_name || 'User'}</span>
+              <span className="text-[10px]" style={{ color: colors.inkTertiary }}>{user?.role || 'VIEWER'}</span>
+            </div>
+            <button onClick={logout} title="Sign out" className="p-1.5 rounded hover:bg-surface2 transition-colors" style={{ color: colors.inkSubtle }}>
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -197,6 +196,38 @@ function Shell() {
   );
 }
 
+function AuthGuard() {
+  const { user, loading } = useAuth();
+  const { colors } = useTheme();
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center" style={{ background: colors.canvas }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: colors.primary, borderTopColor: 'transparent' }} />
+          <span className="text-[13px]" style={{ color: colors.inkSubtle }}>Loading KAEOS...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Suspense fallback={null}>
+        <LoginPage />
+      </Suspense>
+    );
+  }
+
+  return <Shell />;
+}
+
 export default function App() {
-  return <ThemeProvider><Shell /></ThemeProvider>;
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGuard />
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }

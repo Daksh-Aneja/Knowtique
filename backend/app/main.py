@@ -22,7 +22,7 @@ from app.api.routes import (
     connectors, conflicts, marketplace, security, pipeline,
     predictive, polymorphic, federated, knowtique10x,
     platform_config, enterprise, agent_factory, pioneer,
-    infrastructure,
+    infrastructure, auth,
 )
 
 settings = get_settings()
@@ -38,6 +38,9 @@ async def lifespan(app: FastAPI):
             logger.info("Database seeded with Knowtique demo data")
         else:
             logger.info("Database already contains data, skipping seed")
+        # Seed demo auth user
+        from app.services.auth import AuthService
+        await AuthService.seed_demo_user(session)
     yield
     # Shutdown cleanup (close connection pools etc.) goes here if needed
 
@@ -90,6 +93,7 @@ app.include_router(enterprise.router,      prefix=PREFIX)
 app.include_router(agent_factory.router,   prefix=PREFIX)
 app.include_router(pioneer.router,         prefix=PREFIX)
 app.include_router(infrastructure.router,  prefix=PREFIX)
+app.include_router(auth.router,            prefix=PREFIX)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

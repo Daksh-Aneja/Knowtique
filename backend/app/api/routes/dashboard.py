@@ -319,3 +319,136 @@ async def compliance_dashboard(db: AsyncSession = Depends(get_db)):
         total_tagged_rules=total - untagged,
         untagged_rules=untagged,
     )
+
+
+@router.get("/cockpit")
+async def executive_cockpit(db: AsyncSession = Depends(get_db)):
+    """S4 Executive Cockpit — aggregated intelligence for C-suite dashboard."""
+    now = datetime.now(timezone.utc)
+
+    # Pioneer Intelligence — live signals from external_intelligence table if it exists
+    from app.models.domain import Signal
+    signals_result = await db.execute(
+        select(Signal).order_by(Signal.created_at.desc()).limit(5)
+    )
+    signals = signals_result.scalars().all()
+    pioneer_alerts = [{
+        "type": s.signal_type or "REGULATORY",
+        "title": s.content[:120] if s.content else "External signal detected",
+        "severity": "warning" if s.weight and s.weight > 0.7 else "info",
+        "source": s.source or "External",
+        "time": str(s.created_at) if s.created_at else "recent",
+    } for s in signals]
+
+    # Debate queue — pending conflicts
+    from app.models.domain import ConflictCase
+    conflicts_result = await db.execute(
+        select(ConflictCase).where(ConflictCase.status == "OPEN")
+        .order_by(ConflictCase.created_at.desc()).limit(5)
+    )
+    conflicts = conflicts_result.scalars().all()
+    debate_queue = [{
+        "id": c.id,
+        "action": c.rule_a_statement[:80] if c.rule_a_statement else "Pending review",
+        "confidence": c.confidence_a or 0.65,
+        "status": c.status,
+        "created_at": str(c.created_at) if c.created_at else None,
+    } for c in conflicts]
+
+    # Org readiness by department
+    dept_q = await db.execute(
+        select(
+            Rule.domain,
+            sqlfunc.count(Rule.id),
+            sqlfunc.avg(Rule.confidence_scalar),
+        )
+        .where(Rule.is_archived == False)
+        .group_by(Rule.domain)
+    )
+    org_readiness = []
+    for domain, count, avg_conf in dept_q.all():
+        if not domain:
+            continue
+        score = int(min((avg_conf or 0.5) * 100, 100))
+        org_readiness.append({
+            "bu": domain,
+            "score": score,
+            "rule_count": count,
+            "status": "green" if score >= 70 else "amber" if score >= 50 else "red",
+        })
+
+    # Cost data
+    try:
+        from app.services.cost_governor import CostGovernorService
+        cost_data = await CostGovernorService.get_cost_telemetry(db, "default", 24)
+    except Exception:
+        cost_data = None
+
+    return {
+        "pioneer_alerts": pioneer_alerts,
+        "debate_queue": debate_queue,
+        "org_readiness": org_readiness,
+        "cost": cost_data,
+    }
+
+
+@router.get("/ooda-events")
+async def ooda_events(db: AsyncSession = Depends(get_db)):
+    """S2 OODA Events — live cognitive loop events from execution history."""
+    from app.models.domain import SkillExecution, Signal
+
+    # Recent executions as OODA events
+    exec_result = await db.execute(
+        select(SkillExecution).order_by(SkillExecution.started_at.desc()).limit(20)
+    )
+    executions = exec_result.scalars().all()
+
+    # Recent signals as OBSERVE events
+    signal_result = await db.execute(
+        select(Signal).order_by(Signal.created_at.desc()).limit(10)
+    )
+    signals = signal_result.scalars().all()
+
+    events = []
+
+    # Map signals to OBSERVE phase
+    for s in signals:
+        events.append({
+            "id": s.id,
+            "phase": "OBSERVE",
+            "status": "complete",
+            "title": f"Signal: {(s.content or 'External event')[:60]}",
+            "detail": f"Source: {s.source or 'unknown'}, weight: {s.weight or 0}",
+            "confidence": s.weight,
+            "timestamp": str(s.created_at) if s.created_at else None,
+        })
+
+    # Map executions to ORIENT/DECIDE/ACT phases
+    for e in executions:
+        phase = "ACT"
+        gate = None
+        if e.status == "PENDING" or e.status == "RUNNING":
+            phase = "ORIENT"
+        elif e.hitl_required and not e.hitl_approved:
+            phase = "DECIDE"
+            gate = "HITL_REQUIRED"
+        elif e.status == "SUCCESS_CLEAN":
+            phase = "ACT"
+            gate = "AUTO_APPROVED"
+
+        events.append({
+            "id": e.id,
+            "phase": phase,
+            "status": "complete" if e.status == "SUCCESS_CLEAN" else "active" if e.status == "RUNNING" else "pending",
+            "title": f"{e.skill_id_name or 'Agent'}: {e.task_intent or 'Execution'}",
+            "detail": f"Route: {e.route_type or 'DIRECT'}, Duration: {e.duration_ms or 0}ms",
+            "confidence": e.confidence_delta,
+            "gate": gate,
+            "timestamp": str(e.started_at) if e.started_at else None,
+        })
+
+    # Sort by timestamp descending
+    events.sort(key=lambda x: x.get("timestamp") or "", reverse=True)
+
+    return {"events": events[:30]}
+
