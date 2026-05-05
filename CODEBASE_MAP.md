@@ -4,59 +4,77 @@
 
 ---
 
-## Repository Structure
-```
+## Detailed Repository Structure
+
+```text
 c:\Knowtique\
 ├── backend/                    # FastAPI Python backend
 │   ├── app/
 │   │   ├── main.py             # App entry point — 137 registered routes, CORS, Auth setup
 │   │   ├── core/
-│   │   │   ├── config.py       # Pydantic Settings (DB, Redis, Kafka, LLM keys, thresholds)
-│   │   │   ├── database.py     # AsyncSession factory — imports ALL model modules for create_all
-│   │   │   └── seed.py         # Demo data seeder (seeds domain models & auth demo users)
+│   │   │   ├── auth.py         # Authentication core utilities
+│   │   │   ├── config.py       # Pydantic Settings
+│   │   │   ├── database.py     # AsyncSession factory
+│   │   │   ├── seed.py         # Demo data seeder
+│   │   │   └── tenant.py       # Multi-tenant isolation middleware
 │   │   ├── models/
-│   │   │   ├── domain.py       # Core SQLAlchemy models (Rule, Skill, Employee, etc.)
-│   │   │   ├── settings.py     # Platform config models
-│   │   │   ├── agent_factory.py # Blueprint/Deploy/Debate/Feed models
-│   │   │   ├── infrastructure.py # S1 Models: CostEvent, ModelConfig, AgentRegistry, Onboarding
-│   │   │   └── auth.py         # RBAC models: User, UserRole (ADMIN/ANALYST/VIEWER)
-│   │   ├── schemas/
-│   │   │   └── ...             # Request/Response validation models
-│   │   ├── api/routes/         # FastAPI routers (see §Routes below)
-│   │   │   ├── infrastructure.py # N1-N4 Infrastructure routes
-│   │   │   └── auth.py         # Authentication and User Management
-│   │   ├── services/           # Business logic modules
-│   │   │   ├── auth.py         # JWT Token & Password hashing
-│   │   │   ├── model_management.py # N1: 4-tier model routing
-│   │   │   ├── cost_governor.py    # N2: Token budgets & real-time telemetry
-│   │   │   ├── agent_protocol.py   # N3: Async messaging & circuit breakers
-│   │   │   └── onboarding_engine.py# N4: Cold-start state machine
+│   │   │   ├── auth.py         # User, UserRole RBAC models
+│   │   │   ├── agent_factory.py# Blueprint, Deploy, Debate models
+│   │   │   ├── calendar.py     # Temporal models
+│   │   │   ├── domain.py       # Core entity models (Rule, Skill)
+│   │   │   ├── fairness.py     # Ethical AI models
+│   │   │   ├── infrastructure.py # CostEvent, AgentRegistry, Onboarding
+│   │   │   └── settings.py     # Platform configuration models
+│   │   ├── schemas/            # Pydantic Request/Response models
+│   │   │   ├── agent_factory.py, dashboard.py, elicitation.py, rules.py, skills.py
+│   │   ├── api/routes/         # 25 FastAPI routers
+│   │   │   ├── agent_factory.py, auth.py, benchmark.py, conflicts.py
+│   │   │   ├── connectors.py, dashboard.py, elicitation.py, enterprise.py
+│   │   │   ├── extraction.py, federated.py, infrastructure.py, knowtique10x.py
+│   │   │   ├── marketplace.py, pioneer.py, pipeline.py, platform_config.py
+│   │   │   ├── polymorphic.py, predictive.py, provenance.py, redteam.py
+│   │   │   └── rules.py, security.py, skills.py, topology.py
+│   │   ├── services/           # 35 Business logic modules
+│   │   │   ├── activity_feed.py, agent_protocol.py, auth.py, benchmark.py
+│   │   │   ├── blueprint_generator.py, compiler.py, compliance.py, confidence.py
+│   │   │   ├── cost_governor.py, debate_engine.py, elicitation.py, event_bus.py
+│   │   │   ├── evolution.py, external_intelligence.py, extraction.py, fairness_engine.py
+│   │   │   ├── federated_engine.py, ingestion.py, knowledge.py, lifecycle.py
+│   │   │   ├── llm_router.py, model_management.py, onboarding_engine.py, org_intelligence.py
+│   │   │   ├── pipeline_service.py, platform.py, polymorphic_engine.py, precog_engine.py
+│   │   │   ├── predictive_ops.py, provenance.py, quantum_ledger.py, redteam.py
+│   │   │   └── regulatory_engine.py, skill_executor.py, temporal_calendar.py
 │   │   └── agents/
-│   │       └── runtime.py      # Execution pipeline
+│   │       └── runtime.py      # Core execution pipeline
 │   └── knowtique.db            # SQLite database (dev)
 ├── frontend/                   # React + Vite + TypeScript
 │   ├── src/
 │   │   ├── App.tsx             # Main AppShell wrapped in AuthProvider & ThemeProvider
 │   │   ├── main.tsx            # React DOM entry
 │   │   ├── index.css           # Premium design system (Inter, Dark/Light mode)
+│   │   ├── api/client.ts       # Typed API client wrapper
 │   │   ├── context/
-│   │   │   ├── ThemeContext.tsx # Dark/Light mode provider
-│   │   │   └── AuthContext.tsx  # JWT persistence, login state, RBAC role helpers
-│   │   ├── api/client.ts       # Typed API functions for all endpoints
+│   │   │   ├── AuthContext.tsx # JWT persistence, login state
+│   │   │   └── ThemeContext.tsx# Dark/Light mode provider
 │   │   ├── components/         # Reusable UI elements
-│   │   │   └── ChatCopilot.tsx # Slide-out conversational AI agent
-│   │   ├── pages/              # Specific module pages
-│   │   │   ├── LoginPage.tsx             # Premium Auth Gateway
-│   │   │   ├── UserManagement.tsx        # RBAC User Control Panel (ADMIN only)
-│   │   │   ├── ConnectorStudio.tsx       # S4: AI-driven data ingestion
-│   │   │   ├── ExecutiveCockpit.tsx      # S4: High-density C-suite overview
-│   │   │   ├── AnalystWorkspace.tsx      # S4: Scenario modelling & KG exploration
-│   │   │   ├── InfrastructureDashboard.tsx # S4: N1-N4 infra visibility
-│   │   │   └── OODAMonitor.tsx           # S4: Cognitive pipeline visualization
-│   │   └── views/              # Core navigational containers
-│   │       ├── KnowledgeView.tsx         # S0: Knowledge layer tabs
-│   │       ├── AgentsView.tsx            # S2: Execution engine tabs
-│   │       └── DecisionsView.tsx         # S4: Experience layer tabs
+│   │   │   ├── ChatCopilot.tsx, DeployConfigModal.tsx, ExecutionDetailView.tsx
+│   │   │   ├── SkillContractViewer.tsx, ThemeAdapter.tsx
+│   │   ├── views/              # Core Navigational Containers
+│   │   │   ├── AgentFactory.tsx, AgentsView.tsx, CommandCenter.tsx
+│   │   │   ├── CompanyBrain.tsx, DecisionsView.tsx, KnowledgeView.tsx
+│   │   │   └── SettingsView.tsx, TrustGovernance.tsx
+│   │   └── pages/              # 39 Specific Module Pages
+│   │       ├── AgentMonitor.tsx, AnalystWorkspace.tsx, BYOKView.tsx
+│   │       ├── BenchmarkNetwork.tsx, ComplianceDashboard.tsx, ConflictArena.tsx
+│   │       ├── ConnectorStudio.tsx, Dashboard.tsx, ElicitationHub.tsx
+│   │       ├── ElicitationSimulator.tsx, EnterpriseCommandCenter.tsx, EvolutionTimeline.tsx
+│   │       ├── ExecutiveCockpit.tsx, ExtractionHub.tsx, FederatedSettings.tsx
+│   │       ├── GettingStarted.tsx, HITLQueue.tsx, InfrastructureDashboard.tsx
+│   │       ├── IntegrationsHub.tsx, Knowtique10X.tsx, LLMRoutingSettings.tsx
+│   │       ├── LoginPage.tsx, MCPToolManager.tsx, Marketplace.tsx, OODAMonitor.tsx
+│   │       ├── OntologyConfig.tsx, PredictiveOps.tsx, ProvenanceLedger.tsx
+│   │       ├── RedTeamDashboard.tsx, RulesExplorer.tsx, SecurityFabric.tsx
+│   │       ├── SkillsRegistry.tsx, TopologyVisualizer.tsx, UserManagement.tsx
 │   └── vite.config.ts
 └── CODEBASE_MAP.md             # This file
 ```
