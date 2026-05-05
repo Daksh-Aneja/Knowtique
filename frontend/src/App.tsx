@@ -18,12 +18,16 @@ const DecisionsView = lazy(() => import('./views/DecisionsView'));
 // Chat Copilot
 const ChatCopilot = lazy(() => import('./components/ChatCopilot'));
 
-type NavItem = { id: string; label: string; icon: any; stratum?: string };
+// User Management (ADMIN only)
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+
+type NavItem = { id: string; label: string; icon: any; stratum?: string; adminOnly?: boolean };
 
 const NAV: NavItem[] = [
   { id: 'knowledge', label: 'Knowledge', icon: Database, stratum: 'S0' },
   { id: 'agents', label: 'Agents', icon: Bot, stratum: 'S2' },
   { id: 'decisions', label: 'Decisions', icon: Activity, stratum: 'S4' },
+  { id: 'users', label: 'User Management', icon: Shield, adminOnly: true },
 ];
 
 function NavButton({ item, active, onClick, colors }: { item: NavItem; active: boolean; onClick: () => void; colors: any }) {
@@ -64,6 +68,7 @@ function Shell() {
       case 'knowledge': return <ThemeAdapter><KnowledgeView domain={domain} /></ThemeAdapter>;
       case 'agents': return <ThemeAdapter><AgentsView domain={domain} /></ThemeAdapter>;
       case 'decisions': return <ThemeAdapter><DecisionsView domain={domain} /></ThemeAdapter>;
+      case 'users': return <ThemeAdapter><UserManagement /></ThemeAdapter>;
       default: return <ThemeAdapter><KnowledgeView domain={domain} /></ThemeAdapter>;
     }
   };
@@ -90,7 +95,7 @@ function Shell() {
         </div>
 
         <div className="flex-1 overflow-y-auto py-1 px-3 space-y-1">
-          {NAV.map(n => (
+          {NAV.filter(n => !n.adminOnly || isAdmin).map(n => (
             <NavButton key={n.id} item={n} active={view === n.id} onClick={() => setView(n.id)} colors={colors} />
           ))}
         </div>
