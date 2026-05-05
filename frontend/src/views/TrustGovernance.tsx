@@ -3,7 +3,7 @@ import { Shield, Scale, Link2, MessageSquare, ShieldAlert, Clock, CheckCircle2, 
 import { api } from '../api/client';
 import { useTheme } from '../context/ThemeContext';
 
-const TrustGovernance: React.FC = () => {
+const TrustGovernance: React.FC<{ domain?: string }> = ({ domain }) => {
   const { colors } = useTheme();
   const [tab, setTab] = useState<'compliance' | 'provenance' | 'fairness' | 'debates'>('compliance');
   const [compliance, setCompliance] = useState<any>(null);

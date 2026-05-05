@@ -53,11 +53,11 @@ export default function KnowledgeView({ domain }: { domain: string }) {
           {activeTab === 'connector-studio' && <ConnectorStudio domain={domain} />}
           {activeTab === 'integrations' && <IntegrationsHub domain={domain} />}
           {activeTab === 'byok' && <BYOKView domain={domain} />}
-          {activeTab === 'topology' && <TopologyVisualizer />}
-          {activeTab === 'extraction' && <ExtractionHub />}
+          {activeTab === 'topology' && <TopologyVisualizer domain={domain} />}
+          {activeTab === 'extraction' && <ExtractionHub domain={domain} />}
           {activeTab === 'rules' && <RulesExplorer domain={domain} />}
           {activeTab === 'skills' && <SkillsRegistry domain={domain} />}
-          {activeTab === 'elicitation' && <ElicitationHub />}
+          {activeTab === 'elicitation' && <ElicitationHub domain={domain} />}
         </Suspense>
       </div>
     </div>

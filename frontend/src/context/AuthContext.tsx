@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8001/api/v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);

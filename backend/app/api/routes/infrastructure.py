@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.tenant import get_tenant_id
 from app.services.model_management import ModelManagementService
 from app.services.cost_governor import CostGovernorService
 from app.services.agent_protocol import AgentProtocolService
@@ -13,25 +14,23 @@ from app.services.onboarding_engine import OnboardingEngineService
 
 router = APIRouter(tags=["Infrastructure (S1)"])
 
-TENANT = "default"
-
 
 # ── N1: Model Management ─────────────────────────────────────────────────────
 
 @router.get("/infrastructure/models")
-async def list_models(db: AsyncSession = Depends(get_db)):
+async def list_models(tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N1 — List all registered LLM models with performance benchmarks."""
-    return await ModelManagementService.get_registry(db, TENANT)
+    return await ModelManagementService.get_registry(db, tenant_id)
 
 
 @router.post("/infrastructure/models")
-async def register_model(data: dict, db: AsyncSession = Depends(get_db)):
+async def register_model(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N1 — Register a new model in the 4-tier catalog."""
     from app.models.infrastructure import ModelTier
     tier_map = {"FAST": ModelTier.FAST, "STANDARD": ModelTier.STANDARD,
                 "DEEP": ModelTier.DEEP, "VERTICAL": ModelTier.VERTICAL}
     return await ModelManagementService.register_model(
-        db, TENANT,
+        db, tenant_id,
         model_name=data.get("model_name", ""),
         provider=data.get("provider", "anthropic"),
         tier=tier_map.get(data.get("tier", "STANDARD"), ModelTier.STANDARD),
@@ -44,26 +43,26 @@ async def register_model(data: dict, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/infrastructure/models/route")
-async def route_model(data: dict, db: AsyncSession = Depends(get_db)):
+async def route_model(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N1 — Route a request to the best model for the given task type."""
     return await ModelManagementService.route_to_model(
-        db, TENANT,
+        db, tenant_id,
         request_type=data.get("request_type", ""),
         preferred_tier=None
     )
 
 
 @router.get("/infrastructure/prompts")
-async def list_prompts(db: AsyncSession = Depends(get_db)):
+async def list_prompts(tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N1 — List all active prompt templates."""
-    return await ModelManagementService.list_prompts(db, TENANT)
+    return await ModelManagementService.list_prompts(db, tenant_id)
 
 
 @router.post("/infrastructure/prompts")
-async def register_prompt(data: dict, db: AsyncSession = Depends(get_db)):
+async def register_prompt(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N1 — Register a versioned prompt template."""
     return await ModelManagementService.register_prompt(
-        db, TENANT,
+        db, tenant_id,
         template_key=data.get("template_key", ""),
         system_prompt=data.get("system_prompt", ""),
         user_template=data.get("user_template"),
@@ -81,22 +80,22 @@ async def estimate_tokens(request_type: str = Query("extraction")):
 # ── N2: Cost Governor ─────────────────────────────────────────────────────────
 
 @router.get("/infrastructure/cost/telemetry")
-async def get_cost_telemetry(hours: int = Query(24), db: AsyncSession = Depends(get_db)):
+async def get_cost_telemetry(hours: int = Query(24), tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N2 — Real-time cost telemetry: token consumption per model, agent, workflow."""
-    return await CostGovernorService.get_cost_telemetry(db, TENANT, hours)
+    return await CostGovernorService.get_cost_telemetry(db, tenant_id, hours)
 
 
 @router.get("/infrastructure/cost/budgets")
-async def list_budgets(db: AsyncSession = Depends(get_db)):
+async def list_budgets(tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N2 — List all token budget allocations."""
-    return await CostGovernorService.get_budgets(db, TENANT)
+    return await CostGovernorService.get_budgets(db, tenant_id)
 
 
 @router.post("/infrastructure/cost/budgets")
-async def create_budget(data: dict, db: AsyncSession = Depends(get_db)):
+async def create_budget(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N2 — Create or update a token budget allocation."""
     return await CostGovernorService.create_budget(
-        db, TENANT,
+        db, tenant_id,
         scope=data.get("scope", "tenant"),
         scope_id=data.get("scope_id"),
         token_limit=data.get("token_limit", 10_000_000),
@@ -105,20 +104,20 @@ async def create_budget(data: dict, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/infrastructure/cost/check")
-async def check_budget(data: dict, db: AsyncSession = Depends(get_db)):
+async def check_budget(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N2 — Check if a request is within budget."""
     return await CostGovernorService.check_budget(
-        db, TENANT,
+        db, tenant_id,
         estimated_tokens=data.get("estimated_tokens", 0),
         scope=data.get("scope", "tenant")
     )
 
 
 @router.post("/infrastructure/cost/record")
-async def record_usage(data: dict, db: AsyncSession = Depends(get_db)):
+async def record_usage(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N2 — Record token consumption event."""
     return await CostGovernorService.record_usage(
-        db, TENANT,
+        db, tenant_id,
         model_name=data.get("model_name", ""),
         model_tier=data.get("model_tier", "STANDARD"),
         input_tokens=data.get("input_tokens", 0),
@@ -133,16 +132,16 @@ async def record_usage(data: dict, db: AsyncSession = Depends(get_db)):
 # ── N3: Agent Protocol ────────────────────────────────────────────────────────
 
 @router.get("/infrastructure/agents/registry")
-async def list_agent_registry(db: AsyncSession = Depends(get_db)):
+async def list_agent_registry(tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — List all registered agents with capabilities and health status."""
-    return await AgentProtocolService.list_agents(db, TENANT)
+    return await AgentProtocolService.list_agents(db, tenant_id)
 
 
 @router.post("/infrastructure/agents/register")
-async def register_agent(data: dict, db: AsyncSession = Depends(get_db)):
+async def register_agent(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — Register an agent in the discovery registry."""
     return await AgentProtocolService.register_agent(
-        db, TENANT,
+        db, tenant_id,
         agent_name=data.get("agent_name", ""),
         agent_type=data.get("agent_type", "base"),
         capabilities=data.get("capabilities", []),
@@ -151,19 +150,19 @@ async def register_agent(data: dict, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/infrastructure/agents/discover")
-async def discover_agent(data: dict, db: AsyncSession = Depends(get_db)):
+async def discover_agent(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — Find the best available agent for a given capability."""
     result = await AgentProtocolService.discover_agent(
-        db, TENANT, capability=data.get("capability", "")
+        db, tenant_id, capability=data.get("capability", "")
     )
     return result or {"error": "no_matching_agent_found"}
 
 
 @router.post("/infrastructure/agents/message")
-async def send_agent_message(data: dict, db: AsyncSession = Depends(get_db)):
+async def send_agent_message(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — Send an async message between agents."""
     return await AgentProtocolService.send_message(
-        db, TENANT,
+        db, tenant_id,
         sender_agent_id=data.get("sender_agent_id", ""),
         receiver_agent_id=data.get("receiver_agent_id", ""),
         message_type=data.get("message_type", "request"),
@@ -178,27 +177,28 @@ async def send_agent_message(data: dict, db: AsyncSession = Depends(get_db)):
 async def get_messages(
     correlation_id: str = Query(None),
     limit: int = Query(50),
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
     """N3 — Get message history."""
     return await AgentProtocolService.get_message_history(
-        db, TENANT, correlation_id=correlation_id, limit=limit
+        db, tenant_id, correlation_id=correlation_id, limit=limit
     )
 
 
 @router.post("/infrastructure/agents/{agent_name}/heartbeat")
-async def agent_heartbeat(agent_name: str, data: dict = {}, db: AsyncSession = Depends(get_db)):
+async def agent_heartbeat(agent_name: str, data: dict = {}, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — Update agent heartbeat and load."""
     await AgentProtocolService.heartbeat(
-        db, TENANT, agent_name, current_load=data.get("current_load", 0)
+        db, tenant_id, agent_name, current_load=data.get("current_load", 0)
     )
     return {"status": "ok"}
 
 
 @router.post("/infrastructure/agents/{agent_name}/circuit/reset")
-async def reset_circuit(agent_name: str, db: AsyncSession = Depends(get_db)):
+async def reset_circuit(agent_name: str, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N3 — Reset circuit breaker for an agent."""
-    await AgentProtocolService.reset_circuit(db, TENANT, agent_name)
+    await AgentProtocolService.reset_circuit(db, tenant_id, agent_name)
     return {"status": "circuit_reset", "agent_name": agent_name}
 
 
@@ -218,11 +218,11 @@ async def get_onboarding(tenant_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/infrastructure/onboarding")
-async def initiate_onboarding(data: dict, db: AsyncSession = Depends(get_db)):
+async def initiate_onboarding(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N4 — Start onboarding for a new tenant."""
     return await OnboardingEngineService.initiate_onboarding(
         db,
-        tenant_id=data.get("tenant_id", TENANT),
+        tenant_id=data.get("tenant_id", tenant_id),
         tenant_name=data.get("tenant_name", "Default Tenant"),
         industry_vertical=data.get("industry_vertical")
     )
@@ -235,10 +235,10 @@ async def advance_onboarding(tenant_id: str, data: dict = {}, db: AsyncSession =
 
 
 @router.post("/infrastructure/schema-mappings/propose")
-async def propose_schema_mappings(data: dict, db: AsyncSession = Depends(get_db)):
+async def propose_schema_mappings(data: dict, tenant_id: str = Depends(get_tenant_id), db: AsyncSession = Depends(get_db)):
     """N4 — AI-propose schema mappings for source fields."""
     return await OnboardingEngineService.propose_mappings(
-        db, TENANT,
+        db, tenant_id,
         connector_id=data.get("connector_id", ""),
         source_fields=data.get("source_fields", [])
     )
@@ -248,11 +248,12 @@ async def propose_schema_mappings(data: dict, db: AsyncSession = Depends(get_db)
 async def get_schema_mappings(
     connector_id: str = Query(None),
     confirmed_only: bool = Query(False),
+    tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db)
 ):
     """N4 — Get schema mappings for a tenant."""
     return await OnboardingEngineService.get_mappings(
-        db, TENANT, connector_id=connector_id, confirmed_only=confirmed_only
+        db, tenant_id, connector_id=connector_id, confirmed_only=confirmed_only
     )
 
 

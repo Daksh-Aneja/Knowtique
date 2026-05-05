@@ -3,7 +3,7 @@ import { BookOpen, Search, Network, MessageSquareText, ChevronDown, ChevronRight
 import { api } from '../api/client';
 import { useTheme } from '../context/ThemeContext';
 
-const CompanyBrain: React.FC = () => {
+const CompanyBrain: React.FC<{ domain?: string }> = ({ domain }) => {
   const { colors } = useTheme();
   const [tab, setTab] = useState<'rules' | 'topology' | 'elicitation'>('rules');
   const [rules, setRules] = useState<any[]>([]);

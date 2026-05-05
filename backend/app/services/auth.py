@@ -15,23 +15,42 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.auth import User, UserRole
 
+from app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
 
-# Simple JWT-like token using HMAC (no external dependency needed)
-SECRET_KEY = "kaeos-jwt-secret-change-in-production-2026"
+# Pull JWT secret from centralized config (reads from .env)
+_settings = get_settings()
+SECRET_KEY = _settings.SECRET_KEY or "kaeos-jwt-secret-change-in-production-2026"
 TOKEN_EXPIRY_HOURS = 24
+
+# bcrypt via passlib — already in requirements.txt, way stronger than SHA-256
+try:
+    from passlib.context import CryptContext
+    _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    _HAS_BCRYPT = True
+except ImportError:
+    _HAS_BCRYPT = False
+    logger.warning("[Auth] passlib[bcrypt] not installed — falling back to SHA-256 (NOT production-safe)")
 
 
 def _hash_password(password: str) -> str:
-    """Hash password with SHA-256 + salt."""
+    """Hash password with bcrypt (preferred) or SHA-256 fallback."""
+    if _HAS_BCRYPT:
+        return _pwd_ctx.hash(password)
+    # Legacy fallback
     salt = secrets.token_hex(16)
     hashed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
     return f"{salt}:{hashed}"
 
 
 def _verify_password(password: str, hashed: str) -> bool:
-    """Verify password against stored hash."""
+    """Verify password — supports bcrypt and legacy SHA-256 hashes."""
     try:
+        # bcrypt hashes start with $2b$
+        if _HAS_BCRYPT and hashed.startswith("$2"):
+            return _pwd_ctx.verify(password, hashed)
+        # Legacy SHA-256 format: salt:hash
         salt, stored_hash = hashed.split(":")
         computed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
         return computed == stored_hash

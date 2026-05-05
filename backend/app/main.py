@@ -54,8 +54,13 @@ app = FastAPI(
 
 # ── Middleware (order matters — outermost is added LAST) ─────────────────────────
 
-# Tenant resolution — runs after CORS on incoming, but must be added FIRST
+from app.core.middleware import RequestIdMiddleware, RequestLoggingMiddleware, RateLimitMiddleware
+
+# Innermost → Outermost: Tenant → RequestID → Logging → RateLimit → CORS
 app.add_middleware(TenantMiddleware)
+app.add_middleware(RequestIdMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=200)
 
 # CORS must be outermost, so it is added LAST
 app.add_middleware(

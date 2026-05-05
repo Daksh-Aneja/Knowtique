@@ -18,7 +18,7 @@ interface UserRecord {
   created_at: string | null;
 }
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8001/api/v1';
 
 export default function UserManagement() {
   const { colors } = useTheme();

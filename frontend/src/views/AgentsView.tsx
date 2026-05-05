@@ -55,10 +55,10 @@ export default function AgentsView({ domain }: { domain: string }) {
           {activeTab === 'ooda' && <OODAMonitor domain={domain} />}
           {activeTab === 'monitor' && <AgentMonitor domain={domain} />}
           {activeTab === 'infrastructure' && <InfrastructureDashboard domain={domain} />}
-          {activeTab === 'routing' && <LLMRoutingSettings />}
-          {activeTab === 'mcp' && <MCPToolManager />}
-          {activeTab === 'marketplace' && <Marketplace />}
-          {activeTab === 'conflict' && <ConflictArena />}
+          {activeTab === 'routing' && <LLMRoutingSettings domain={domain} />}
+          {activeTab === 'mcp' && <MCPToolManager domain={domain} />}
+          {activeTab === 'marketplace' && <Marketplace domain={domain} />}
+          {activeTab === 'conflict' && <ConflictArena domain={domain} />}
         </Suspense>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { Settings as SettingsIcon, Cpu, Plug, Calendar, Globe2, Shield, RefreshC
 import { api } from '../api/client';
 import { useTheme } from '../context/ThemeContext';
 
-const SettingsView: React.FC = () => {
+const SettingsView: React.FC<{ domain?: string }> = ({ domain }) => {
   const { colors, theme, toggle } = useTheme();
   const [tab, setTab] = useState<'llm' | 'integrations' | 'calendar' | 'platform'>('llm');
   const [llmConfig, setLlmConfig] = useState<any>(null);

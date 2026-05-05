@@ -60,5 +60,16 @@ backend/knowtique.db
 # ── Build Artifacts ──
 frontend/dist/
 
+# ── Alembic ──
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
+
+# ── API Keys (sensitive — never commit) ──
+backend/data/api_keys.json
+
+# ── Docker volumes ──
+pgdata/
+redisdata/
+
 # ── Presentation files (internal) ──
 *.pptx

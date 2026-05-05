@@ -62,10 +62,10 @@ export default function DecisionsView({ domain }: { domain: string }) {
           {activeTab === 'live' && <CommandCenter domain={domain} />}
           {activeTab === 'hitl' && <HITLQueue domain={domain} />}
           {activeTab === 'performance' && <EvolutionTimeline domain={domain} />}
-          {activeTab === 'compliance' && <ComplianceDashboard />}
-          {activeTab === 'provenance' && <ProvenanceLedger />}
-          {activeTab === 'redteam' && <RedTeamDashboard />}
-          {activeTab === 'enterprise' && <EnterpriseCommandCenter />}
+          {activeTab === 'compliance' && <ComplianceDashboard domain={domain} />}
+          {activeTab === 'provenance' && <ProvenanceLedger domain={domain} />}
+          {activeTab === 'redteam' && <RedTeamDashboard domain={domain} />}
+          {activeTab === 'enterprise' && <EnterpriseCommandCenter domain={domain} />}
         </Suspense>
       </div>
     </div>

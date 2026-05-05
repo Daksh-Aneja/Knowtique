@@ -24,6 +24,16 @@ class LLMRouter:
         "fast": "groq/llama-3.3-70b-versatile",           # Tier 3: formatting, simple ops (open-source via Groq)
     }
 
+    # Fallback chains — if primary model fails (429/503), try next in chain
+    FALLBACK_CHAINS = {
+        "reasoning": ["claude-sonnet-4-20250514", "gpt-4o", "groq/llama-3.3-70b-versatile"],
+        "classification": ["groq/llama-3.3-70b-versatile", "gpt-4o-mini", "claude-haiku-4-5-20251001"],
+        "fast": ["groq/llama-3.3-70b-versatile", "gpt-4o-mini", "claude-haiku-4-5-20251001"],
+    }
+
+    MAX_RETRIES = 3
+    RETRY_BACKOFF_SECS = [1.0, 3.0, 8.0]  # Exponential-ish backoff
+
     def __init__(self, api_keys: Optional[dict] = None):
         self.api_keys = api_keys or {}
 
@@ -38,68 +48,97 @@ class LLMRouter:
         tenant_api_keys: Optional[dict] = None,
     ) -> dict | str:
         """
-        Send a completion request through LiteLLM.
+        Send a completion request through LiteLLM with retry + fallback.
         
         If model_tier is provided, it maps to a configured model and returns
         the content string directly (convenience for AEOS services).
         Otherwise returns: {"content": str, "model": str, "usage": {...}}
         """
+        import asyncio
+
         # Resolve model from tier if provided
         return_string = False
+        fallback_chain = [model]
         if model_tier:
             model = self.MODEL_TIERS.get(model_tier, model)
+            fallback_chain = self.FALLBACK_CHAINS.get(model_tier, [model])
             return_string = True
 
-        try:
-            import litellm
+        last_error = None
+        for chain_model in fallback_chain:
+            for attempt in range(self.MAX_RETRIES):
+                try:
+                    result = await self._call_llm(
+                        chain_model, prompt, system_prompt, temperature,
+                        max_tokens, tenant_api_keys
+                    )
+                    if return_string:
+                        return result["content"]
+                    return result
+                except ImportError:
+                    logger.warning("LiteLLM not installed — LLM routing unavailable")
+                    return "" if return_string else {"content": "", "model": model, "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}}
+                except Exception as e:
+                    last_error = e
+                    is_rate_limit = "429" in str(e) or "rate" in str(e).lower()
+                    is_server_error = "503" in str(e) or "500" in str(e)
+                    if is_rate_limit or is_server_error:
+                        wait = self.RETRY_BACKOFF_SECS[min(attempt, len(self.RETRY_BACKOFF_SECS) - 1)]
+                        logger.warning(f"[LLM] {chain_model} attempt {attempt+1} failed ({e}), retrying in {wait}s")
+                        await asyncio.sleep(wait)
+                    else:
+                        # Non-retryable error — break to next model in chain
+                        logger.error(f"[LLM] {chain_model} non-retryable error: {e}")
+                        break
+            logger.warning(f"[LLM] Exhausted retries for {chain_model}, trying next fallback")
 
-            effective_keys = {**self.api_keys, **(tenant_api_keys or {})}
+        logger.error(f"[LLM] All fallback models exhausted. Last error: {last_error}")
+        raise last_error or RuntimeError("All LLM fallback models failed")
 
-            if "openai" in effective_keys:
-                litellm.api_key = effective_keys["openai"]
-            if "anthropic" in effective_keys:
-                litellm.anthropic_key = effective_keys["anthropic"]
+    async def _call_llm(
+        self, model: str, prompt: str, system_prompt: Optional[str],
+        temperature: float, max_tokens: int, tenant_api_keys: Optional[dict],
+    ) -> dict:
+        """Single LLM call — extracted for retry/fallback orchestration."""
+        import litellm
 
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": prompt})
+        effective_keys = {**self.api_keys, **(tenant_api_keys or {})}
 
-            api_base = None
-            if model.startswith("ollama/"):
-                api_base = effective_keys.get("ollama_base_url", "http://localhost:11434")
-            elif model.startswith("custom/"):
-                api_base = effective_keys.get("custom_base_url")
-                model = model.replace("custom/", "")
+        if "openai" in effective_keys:
+            litellm.api_key = effective_keys["openai"]
+        if "anthropic" in effective_keys:
+            litellm.anthropic_key = effective_keys["anthropic"]
 
-            response = await litellm.acompletion(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                api_base=api_base,
-                api_key=effective_keys.get(self._get_provider(model)),
-            )
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
 
-            content = response.choices[0].message.content
-            if return_string:
-                return content
+        api_base = None
+        if model.startswith("ollama/"):
+            api_base = effective_keys.get("ollama_base_url", "http://localhost:11434")
+        elif model.startswith("custom/"):
+            api_base = effective_keys.get("custom_base_url")
+            model = model.replace("custom/", "")
 
-            return {
-                "content": content,
-                "model": response.model,
-                "usage": {
-                    "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
-                    "completion_tokens": response.usage.completion_tokens if response.usage else 0,
-                    "total_tokens": response.usage.total_tokens if response.usage else 0,
-                },
-            }
-        except ImportError:
-            logger.warning("LiteLLM not installed — LLM routing unavailable")
-            return "" if return_string else {"content": "", "model": model, "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}}
-        except Exception as e:
-            logger.error(f"LLM completion failed: {e}")
-            raise
+        response = await litellm.acompletion(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            api_base=api_base,
+            api_key=effective_keys.get(self._get_provider(model)),
+        )
+
+        return {
+            "content": response.choices[0].message.content,
+            "model": response.model,
+            "usage": {
+                "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
+                "completion_tokens": response.usage.completion_tokens if response.usage else 0,
+                "total_tokens": response.usage.total_tokens if response.usage else 0,
+            },
+        }
 
     async def embed(
         self,

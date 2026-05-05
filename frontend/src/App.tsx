@@ -1,11 +1,13 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import {
   BrainCircuit, Bot, Activity, Search, Bell, Sun, Moon,
-  ChevronDown, Settings, Database, Workflow, Shield, MessageSquare, LogOut
+  ChevronDown, Settings as SettingsIcon, Database, Workflow, Shield,
+  MessageSquare, LogOut, Building2, X
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ThemeAdapter from './components/ThemeAdapter';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -21,13 +23,21 @@ const ChatCopilot = lazy(() => import('./components/ChatCopilot'));
 // User Management (ADMIN only)
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 
+// Settings & Company Brain (orphaned views — now wired)
+const SettingsView = lazy(() => import('./views/SettingsView'));
+const CompanyBrain = lazy(() => import('./views/CompanyBrain'));
+const TrustGovernance = lazy(() => import('./views/TrustGovernance'));
+
 type NavItem = { id: string; label: string; icon: any; stratum?: string; adminOnly?: boolean };
 
 const NAV: NavItem[] = [
   { id: 'knowledge', label: 'Knowledge', icon: Database, stratum: 'S0' },
   { id: 'agents', label: 'Agents', icon: Bot, stratum: 'S2' },
   { id: 'decisions', label: 'Decisions', icon: Activity, stratum: 'S4' },
+  { id: 'brain', label: 'Company Brain', icon: Building2, stratum: 'S3' },
+  { id: 'trust', label: 'Trust & Governance', icon: Shield, stratum: 'P3' },
   { id: 'users', label: 'User Management', icon: Shield, adminOnly: true },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 function NavButton({ item, active, onClick, colors }: { item: NavItem; active: boolean; onClick: () => void; colors: any }) {
@@ -58,6 +68,43 @@ function Shell() {
   const [domain, setDomain] = useState('All Domains');
   const [domainOpen, setDomainOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Cmd/Ctrl+K to focus search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        searchRef.current?.blur();
+        setSearchQuery('');
+        setSearchFocused(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  // Search results — navigable modules
+  const SEARCHABLE_MODULES = [
+    { id: 'knowledge', label: 'Knowledge', keywords: 'rules skills topology extraction connectors' },
+    { id: 'agents', label: 'Agents', keywords: 'deploy blueprint ooda llm mcp marketplace' },
+    { id: 'decisions', label: 'Decisions', keywords: 'cockpit compliance provenance redteam hitl' },
+    { id: 'brain', label: 'Company Brain', keywords: 'organization intelligence company' },
+    { id: 'trust', label: 'Trust & Governance', keywords: 'compliance provenance fairness debates audit' },
+    { id: 'settings', label: 'Settings', keywords: 'config ontology federated' },
+    { id: 'users', label: 'User Management', keywords: 'admin roles users rbac' },
+  ];
+  const searchResults = searchQuery.length >= 2
+    ? SEARCHABLE_MODULES.filter(m =>
+        m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.keywords.includes(searchQuery.toLowerCase())
+      )
+    : [];
   
   const DOMAINS = ['All Domains', 'HR', 'Finance', 'Engineering', 'Sales', 'Support'];
 
@@ -68,7 +115,10 @@ function Shell() {
       case 'knowledge': return <ThemeAdapter><KnowledgeView domain={domain} /></ThemeAdapter>;
       case 'agents': return <ThemeAdapter><AgentsView domain={domain} /></ThemeAdapter>;
       case 'decisions': return <ThemeAdapter><DecisionsView domain={domain} /></ThemeAdapter>;
+      case 'brain': return <ThemeAdapter><CompanyBrain domain={domain} /></ThemeAdapter>;
+      case 'trust': return <ThemeAdapter><TrustGovernance domain={domain} /></ThemeAdapter>;
       case 'users': return <ThemeAdapter><UserManagement /></ThemeAdapter>;
+      case 'settings': return <ThemeAdapter><SettingsView domain={domain} /></ThemeAdapter>;
       default: return <ThemeAdapter><KnowledgeView domain={domain} /></ThemeAdapter>;
     }
   };
@@ -148,17 +198,48 @@ function Shell() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: colors.inkSubtle }} />
-              <input 
-                type="text" 
-                placeholder="Search KAEOS..." 
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                placeholder="Search… ⌘K"
                 className="pl-8 pr-3 py-1.5 rounded border text-[12px] focus:outline-none focus:ring-1 transition-all"
-                style={{ 
-                  background: colors.canvas, 
-                  borderColor: colors.hairline, 
+                style={{
+                  background: colors.canvas,
+                  borderColor: searchFocused ? colors.primary : colors.hairline,
                   color: colors.ink,
-                  width: '200px'
+                  width: searchFocused ? '280px' : '200px',
                 }}
               />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: colors.inkSubtle }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {/* Search Results Dropdown */}
+              {searchFocused && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 mt-1 w-full rounded border shadow-lg z-50 overflow-hidden"
+                  style={{ background: colors.surface1, borderColor: colors.hairline }}>
+                  {searchResults.map(r => (
+                    <div key={r.id}
+                      onMouseDown={() => { setView(r.id); setSearchQuery(''); }}
+                      className="px-3 py-2 text-[13px] cursor-pointer hover:bg-surface2 transition-colors flex items-center gap-2"
+                      style={{ color: colors.ink }}>
+                      <Search className="w-3 h-3" style={{ color: colors.inkSubtle }} />
+                      {r.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {searchFocused && searchQuery.length >= 2 && searchResults.length === 0 && (
+                <div className="absolute top-full left-0 mt-1 w-full rounded border shadow-lg z-50 px-3 py-2 text-[12px]"
+                  style={{ background: colors.surface1, borderColor: colors.hairline, color: colors.inkSubtle }}>
+                  No modules match "{searchQuery}"
+                </div>
+              )}
             </div>
             <button className="p-1.5 rounded hover:bg-surface2 transition-colors relative" style={{ color: colors.inkSubtle }}>
               <Bell className="w-4 h-4" />
@@ -178,16 +259,18 @@ function Shell() {
 
         {/* Dynamic Content */}
         <div className="flex-1 overflow-y-auto" style={{ background: colors.canvas }}>
-          <Suspense fallback={
-            <div className="h-full w-full flex items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-[13px]" style={{ color: colors.inkSubtle }}>Loading Module...</span>
+          <ErrorBoundary fallbackTitle={`${NAV.find(n => n.id === view)?.label || 'Module'} encountered an error`}>
+            <Suspense fallback={
+              <div className="h-full w-full flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[13px]" style={{ color: colors.inkSubtle }}>Loading Module...</span>
+                </div>
               </div>
-            </div>
-          }>
-            {renderView()}
-          </Suspense>
+            }>
+              {renderView()}
+            </Suspense>
+          </ErrorBoundary>
         </div>
 
         {/* Chat Copilot Overlay */}
