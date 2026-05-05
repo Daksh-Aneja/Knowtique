@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   BrainCircuit, Bot, Activity, Search, Bell, Sun, Moon,
-  ChevronDown, Settings as SettingsIcon, Database, Workflow, Shield,
+  ChevronDown, Settings as SettingsIcon, Database,  Shield,
   MessageSquare, LogOut, Building2, X
 } from 'lucide-react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -28,7 +28,7 @@ const SettingsView = lazy(() => import('./views/SettingsView'));
 const CompanyBrain = lazy(() => import('./views/CompanyBrain'));
 const TrustGovernance = lazy(() => import('./views/TrustGovernance'));
 
-type NavItem = { id: string; label: string; icon: any; stratum?: string; adminOnly?: boolean };
+type NavItem = { id: string; label: string; icon: React.ElementType; stratum?: string; adminOnly?: boolean };
 
 const NAV: NavItem[] = [
   { id: 'knowledge', label: 'Knowledge', icon: Database, stratum: 'S0' },
@@ -40,7 +40,7 @@ const NAV: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
-function NavButton({ item, active, onClick, colors }: { item: NavItem; active: boolean; onClick: () => void; colors: any }) {
+function NavButton({ item, active, onClick, colors }: { item: NavItem; active: boolean; onClick: () => void; colors: Record<string, string> }) {
   return (
     <button onClick={onClick}
       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[14px] transition-all duration-200 ${active ? 'font-medium' : ''}`}
@@ -108,7 +108,7 @@ function Shell() {
   
   const DOMAINS = ['All Domains', 'HR', 'Finance', 'Engineering', 'Sales', 'Support'];
 
-  const activeLabel = NAV.find(n => n.id === view)?.label || view;
+
 
   const renderView = () => {
     switch (view) {
