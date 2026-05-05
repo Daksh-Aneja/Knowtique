@@ -73,3 +73,7 @@ redisdata/
 
 # ── Presentation files (internal) ──
 *.pptx
+
+# ── AI Structural Maps (internal — not user-facing) ──
+DEPENDENCY_GRAPH.md
+CODEBASE_MAP.md
