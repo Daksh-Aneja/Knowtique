@@ -28,7 +28,7 @@ const CommandCenter: React.FC<{ domain?: string }> = ({ domain = 'All Domains' }
       if (h.status === 'fulfilled') setHealth(h.value);
       if (f.status === 'fulfilled') setFeed(f.value?.events || []);
       if (a.status === 'fulfilled') setActions(a.value?.events || []);
-    } catch {}
+    } catch (err) { console.error('[CommandCenter] refresh failed:', err); }
     setLoading(false);
     setFeedLoading(false);
   };

@@ -30,7 +30,21 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: create tables + seed data. Shutdown: cleanup."""
+    """Startup: validate config, create tables, seed data. Shutdown: cleanup."""
+    # ── Security checks ──────────────────────────────────────────────────
+    if not settings.SECRET_KEY:
+        import secrets
+        settings.SECRET_KEY = secrets.token_urlsafe(32)
+        logger.warning(
+            "[SECURITY] SECRET_KEY is empty — generated a random key for this session. "
+            "Set SECRET_KEY in .env for production to persist JWT sessions across restarts."
+        )
+    if settings.ADMIN_SECRET == "dev_secret":
+        logger.warning(
+            "[SECURITY] ADMIN_SECRET is still 'dev_secret'. "
+            "Set a unique ADMIN_SECRET in .env before deploying to production."
+        )
+
     await init_db()
     async with AsyncSessionLocal() as session:
         seeded = await seed_database(session)

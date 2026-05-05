@@ -10,9 +10,9 @@ pydantic==2.9.0
 pydantic-settings==2.5.0
 
 # Knowledge & ML
-pgvector==0.3.5
-sentence-transformers==3.1.0
-hdbscan==0.8.38
+# pgvector==0.3.5          # Enable when vector store is active
+# sentence-transformers==3.1.0  # Enable when local embeddings needed
+# hdbscan==0.8.38          # Enable when clustering is implemented
 spacy==3.7.6
 presidio-analyzer==2.2.355
 presidio-anonymizer==2.2.355
@@ -23,15 +23,15 @@ anthropic==0.34.0
 openai==1.50.0
 tiktoken==0.7.0
 
-# Event Streaming
-confluent-kafka==2.5.3
-fastavro==1.9.7
+# Event Streaming — PHANTOM: not imported anywhere
+# confluent-kafka==2.5.3
+# fastavro==1.9.7
 
-# Graph DB
-neo4j==5.25.0
+# Graph DB — PHANTOM: import guarded in knowledge.py
+# neo4j==5.25.0
 
-# Workflow
-temporalio==1.7.1
+# Workflow — PHANTOM: not imported anywhere
+# temporalio==1.7.1
 
 # Caching & Utils
 redis==5.1.0
@@ -39,12 +39,12 @@ httpx==0.27.2
 python-multipart==0.0.9
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-celery==5.4.0
+# celery==5.4.0            # PHANTOM: not imported anywhere
 
-# Observability
-opentelemetry-api==1.27.0
-opentelemetry-sdk==1.27.0
-opentelemetry-instrumentation-fastapi==0.48b0
+# Observability — enable when OpenTelemetry is wired
+# opentelemetry-api==1.27.0
+# opentelemetry-sdk==1.27.0
+# opentelemetry-instrumentation-fastapi==0.48b0
 structlog==24.4.0
 
 # Testing

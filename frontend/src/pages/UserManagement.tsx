@@ -42,7 +42,7 @@ export default function UserManagement() {
     try {
       const res = await fetch(`${API_BASE}/auth/users`, { headers });
       if (res.ok) setUsers(await res.json());
-    } catch {}
+    } catch (err) { console.error('[UserManagement] fetch failed:', err); }
     setLoading(false);
   };
 

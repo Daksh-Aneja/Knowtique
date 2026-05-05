@@ -9,10 +9,10 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "Knowtique"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
     API_PREFIX: str = "/api/v1"
-    SECRET_KEY: str = ""  # REQUIRED: set in .env — python -c "import secrets; print(secrets.token_urlsafe(32))"
-    ADMIN_SECRET: str = "dev_secret"  # REQUIRED: set in .env for production
+    SECRET_KEY: str = ""  # REQUIRED in prod: python -c "import secrets; print(secrets.token_urlsafe(32))"
+    ADMIN_SECRET: str = "dev_secret"  # REQUIRED in prod: set a unique admin secret
 
     # Database — SQLite for local dev, PostgreSQL for production
     DATABASE_URL: str = "sqlite+aiosqlite:///./knowtique.db"

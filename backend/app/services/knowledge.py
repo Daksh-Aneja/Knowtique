@@ -228,7 +228,10 @@ class PolystoreEngine:
         if not neo4j_uri:
             raise RuntimeError("NEO4J_URI not configured — graph write skipped")
 
-        from neo4j import AsyncGraphDatabase
+        try:
+            from neo4j import AsyncGraphDatabase
+        except ImportError:
+            raise RuntimeError("neo4j package not installed — graph write skipped")
         async with AsyncGraphDatabase.driver(
             neo4j_uri, auth=(neo4j_user, neo4j_pass)
         ) as driver:
