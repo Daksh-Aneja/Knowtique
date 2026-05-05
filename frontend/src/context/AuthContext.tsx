@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../api/client';
 
 interface AuthUser {
   id: string;
@@ -29,7 +30,6 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8001/api/v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -39,32 +39,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Validate token on mount
   useEffect(() => {
     if (!token) { setLoading(false); return; }
-    fetch(`${API_BASE}/auth/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(r => r.ok ? r.json() : Promise.reject())
+    api.authMe()
       .then(u => { setUser(u); setLoading(false); })
       .catch(() => { setToken(null); localStorage.removeItem('kaeos-token'); setLoading(false); });
   }, [token]);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        return { ok: false, error: err.detail || 'Invalid credentials' };
-      }
-      const data = await res.json();
+      const data = await api.authLogin({ email, password });
       setToken(data.token);
       setUser(data.user);
       localStorage.setItem('kaeos-token', data.token);
       return { ok: true };
-    } catch {
-      return { ok: false, error: 'Network error' };
+    } catch (err: any) {
+      return { ok: false, error: err.message || 'Network error' };
     }
   }, []);
 

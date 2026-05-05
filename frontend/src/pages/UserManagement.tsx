@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../api/client';
 import {
   UserPlus, Shield, Eye, Pencil, Trash2, CheckCircle, XCircle,
   Loader2, Users, Crown, BarChart3, ChevronDown
@@ -18,7 +19,6 @@ interface UserRecord {
   created_at: string | null;
 }
 
-const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8001/api/v1';
 
 export default function UserManagement() {
   const { colors } = useTheme();
@@ -40,8 +40,8 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_BASE}/auth/users`, { headers });
-      if (res.ok) setUsers(await res.json());
+      const data = await api.authUsers();
+      setUsers(data);
     } catch (err) { console.error('[UserManagement] fetch failed:', err); }
     setLoading(false);
   };
@@ -53,34 +53,30 @@ export default function UserManagement() {
     setCreateError('');
     setCreating(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/users`, {
-        method: 'POST', headers,
-        body: JSON.stringify({ email: newEmail, display_name: newName, password: newPassword, role: newRole }),
-      });
-      if (res.ok) {
-        setShowCreate(false);
-        setNewEmail(''); setNewName(''); setNewPassword(''); setNewRole('VIEWER');
-        fetchUsers();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setCreateError(err.detail || 'Failed to create user');
-      }
-    } catch { setCreateError('Network error'); }
+      await api.authCreateUser({ email: newEmail, display_name: newName, password: newPassword, role: newRole });
+      setShowCreate(false);
+      setNewEmail(''); setNewName(''); setNewPassword(''); setNewRole('VIEWER');
+      fetchUsers();
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create user');
+    }
     setCreating(false);
   };
 
   const handleRoleChange = async (userId: string, role: string) => {
-    await fetch(`${API_BASE}/auth/users/${userId}/role`, {
-      method: 'PUT', headers, body: JSON.stringify({ role }),
-    });
-    setEditingRole(null);
-    fetchUsers();
+    try {
+      await api.authUpdateRole(userId, role);
+      setEditingRole(null);
+      fetchUsers();
+    } catch (err) { console.error('[UserManagement] role update failed:', err); }
   };
 
   const handleDeactivate = async (userId: string) => {
     if (!confirm('Deactivate this user?')) return;
-    await fetch(`${API_BASE}/auth/users/${userId}`, { method: 'DELETE', headers });
-    fetchUsers();
+    try {
+      await api.authDeleteUser(userId);
+      fetchUsers();
+    } catch (err) { console.error('[UserManagement] deactivate failed:', err); }
   };
 
   const roleIcon = (r: string) => r === 'ADMIN' ? Crown : r === 'ANALYST' ? BarChart3 : Eye;

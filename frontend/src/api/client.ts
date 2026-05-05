@@ -395,6 +395,14 @@ export interface PendingHITLItem {
 
 // ─── API Functions ───
 export const api = {
+  // Auth
+  authMe: () => request<any>('/auth/me'),
+  authLogin: (credentials: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  authUsers: () => request<any>('/auth/users'),
+  authCreateUser: (data: any) => request<any>('/auth/users', { method: 'POST', body: JSON.stringify(data) }),
+  authUpdateRole: (id: string, role: string) => request<any>(`/auth/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+  authDeleteUser: (id: string) => request<any>(`/auth/users/${id}`, { method: 'DELETE' }),
+
   // Dashboard
   getHealth: () => request<KBHealth>('/dashboard/health'),
   getCompliance: () => request<ComplianceDashboard>('/dashboard/compliance'),
