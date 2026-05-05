@@ -136,7 +136,7 @@ export default function ExecutiveCockpit({ domain }: { domain?: string }) {
         <div style={card}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[13px] font-semibold flex items-center gap-2">
-              <Globe className="w-4 h-4" style={{ color: '#f59e0b' }} /> Pioneer Intelligence
+              <Globe className="w-4 h-4" style={{ color: '#f59e0b' }} /> External Intelligence
             </h3>
             <span className="text-[10px]" style={{ color: colors.inkSubtle }}>External signals</span>
           </div>
