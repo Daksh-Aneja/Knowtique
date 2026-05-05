@@ -52,7 +52,7 @@ export default function InfrastructureDashboard({ domain }: { domain?: string })
   const demoModels = models.length ? models : [
     { id: '1', model_name: 'claude-3-haiku-20240307', provider: 'anthropic', tier: 'FAST', is_active: true, is_canary: false, avg_latency_ms: 180, success_rate: 0.99, cost_per_1k_input: 0.00025, cost_per_1k_output: 0.00125, use_cases: ['pii_classification', 'extraction'] },
     { id: '2', model_name: 'claude-sonnet-4-20250514', provider: 'anthropic', tier: 'STANDARD', is_active: true, is_canary: false, avg_latency_ms: 850, success_rate: 0.97, cost_per_1k_input: 0.003, cost_per_1k_output: 0.015, use_cases: ['orchestration', 'compliance'] },
-    { id: '3', model_name: 'claude-opus-4-20250514', provider: 'anthropic', tier: 'DEEP', is_active: true, is_canary: false, avg_latency_ms: 2200, success_rate: 0.95, cost_per_1k_input: 0.015, cost_per_1k_output: 0.075, use_cases: ['debate', 'pioneer_analysis'] },
+    { id: '3', model_name: 'claude-opus-4-20250514', provider: 'anthropic', tier: 'DEEP', is_active: true, is_canary: false, avg_latency_ms: 2200, success_rate: 0.95, cost_per_1k_input: 0.015, cost_per_1k_output: 0.075, use_cases: ['debate', 'strategic_analysis'] },
     { id: '4', model_name: 'llama-3.3-70b-versatile', provider: 'groq', tier: 'FAST', is_active: true, is_canary: true, avg_latency_ms: 120, success_rate: 0.96, cost_per_1k_input: 0.00059, cost_per_1k_output: 0.00079, use_cases: ['intent_routing', 'classification'] },
   ];
 
@@ -60,8 +60,8 @@ export default function InfrastructureDashboard({ domain }: { domain?: string })
     { id: '1', agent_name: 'ComplianceAgent', agent_type: 'base', capabilities: ['compliance_check', 'audit'], health_status: 'HEALTHY', circuit_state: 'CLOSED', current_load: 3, max_concurrent: 10, failure_count: 0 },
     { id: '2', agent_name: 'ExtractionAgent', agent_type: 'base', capabilities: ['extraction', 'clustering'], health_status: 'HEALTHY', circuit_state: 'CLOSED', current_load: 5, max_concurrent: 10, failure_count: 0 },
     { id: '3', agent_name: 'DebateProposer', agent_type: 'debate', capabilities: ['debate', 'argumentation'], health_status: 'HEALTHY', circuit_state: 'CLOSED', current_load: 1, max_concurrent: 5, failure_count: 0 },
-    { id: '4', agent_name: 'FairnessAgent', agent_type: 'pioneer', capabilities: ['ethical_ai', 'bias_check'], health_status: 'DEGRADED', circuit_state: 'HALF_OPEN', current_load: 2, max_concurrent: 5, failure_count: 3 },
-    { id: '5', agent_name: 'TemporalAgent', agent_type: 'pioneer', capabilities: ['temporal_reasoning', 'scheduling'], health_status: 'HEALTHY', circuit_state: 'CLOSED', current_load: 0, max_concurrent: 10, failure_count: 0 },
+    { id: '4', agent_name: 'FairnessAgent', agent_type: 'strategic', capabilities: ['ethical_ai', 'bias_check'], health_status: 'DEGRADED', circuit_state: 'HALF_OPEN', current_load: 2, max_concurrent: 5, failure_count: 3 },
+    { id: '5', agent_name: 'TemporalAgent', agent_type: 'strategic', capabilities: ['temporal_reasoning', 'scheduling'], health_status: 'HEALTHY', circuit_state: 'CLOSED', current_load: 0, max_concurrent: 10, failure_count: 0 },
   ];
 
   return (

@@ -123,7 +123,7 @@ const IntegrationsHub = ({ domain = 'All Domains' }: { domain?: string }) => {
     })}
    </div>
 
-    {/* L12 Pioneer Feature: Live Vectorization Stream */}
+    {/* L12 Advanced Feature: Live Vectorization Stream */}
     <div className="mt-12 mb-8">
      <div className="flex justify-between items-center mb-4">
       <h2 className="text-xl font-bold text-gray-900 tracking-tight">Live Vectorization Stream</h2>
