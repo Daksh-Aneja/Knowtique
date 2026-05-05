@@ -621,4 +621,68 @@ export const api = {
         risk_tolerance: riskTolerance || 'MEDIUM'
       })
     }),
+
+  // ─── S1 Infrastructure Layer (KAEOS N1-N4) ───
+
+  // N1: Model Management
+  getModelRegistry: () => request<any[]>('/infrastructure/models'),
+  registerModel: (data: any) => request<any>('/infrastructure/models', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+  routeModel: (requestType: string) => request<any>('/infrastructure/models/route', {
+    method: 'POST', body: JSON.stringify({ request_type: requestType })
+  }),
+  estimateTokens: (requestType: string) => request<any>(`/infrastructure/models/estimate?request_type=${requestType}`),
+  getPromptTemplates: () => request<any[]>('/infrastructure/prompts'),
+  registerPrompt: (data: any) => request<any>('/infrastructure/prompts', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+
+  // N2: Cost Governor
+  getCostTelemetry: (hours: number = 24) => request<any>(`/infrastructure/cost/telemetry?hours=${hours}`),
+  getCostBudgets: () => request<any[]>('/infrastructure/cost/budgets'),
+  createCostBudget: (data: any) => request<any>('/infrastructure/cost/budgets', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+  checkBudget: (estimatedTokens: number) => request<any>('/infrastructure/cost/check', {
+    method: 'POST', body: JSON.stringify({ estimated_tokens: estimatedTokens })
+  }),
+
+  // N3: Agent Protocol
+  getAgentRegistry: () => request<any[]>('/infrastructure/agents/registry'),
+  registerAgent: (data: any) => request<any>('/infrastructure/agents/register', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+  discoverAgent: (capability: string) => request<any>('/infrastructure/agents/discover', {
+    method: 'POST', body: JSON.stringify({ capability })
+  }),
+  sendAgentMessage: (data: any) => request<any>('/infrastructure/agents/message', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+  getAgentMessages: (correlationId?: string) => request<any[]>(
+    `/infrastructure/agents/messages${correlationId ? `?correlation_id=${correlationId}` : ''}`
+  ),
+
+  // N4: Onboarding
+  getOnboardingList: () => request<any[]>('/infrastructure/onboarding'),
+  getOnboardingStatus: (tenantId: string) => request<any>(`/infrastructure/onboarding/${tenantId}`),
+  initiateOnboarding: (data: any) => request<any>('/infrastructure/onboarding', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+  advanceOnboarding: (tenantId: string) => request<any>(`/infrastructure/onboarding/${tenantId}/advance`, {
+    method: 'POST'
+  }),
+  proposeSchemaMappings: (connectorId: string, sourceFields: any[]) => request<any[]>(
+    '/infrastructure/schema-mappings/propose', {
+      method: 'POST', body: JSON.stringify({ connector_id: connectorId, source_fields: sourceFields })
+    }
+  ),
+  getSchemaMappings: (connectorId?: string) => request<any[]>(
+    `/infrastructure/schema-mappings${connectorId ? `?connector_id=${connectorId}` : ''}`
+  ),
+  confirmSchemaMapping: (mappingId: string, confirmedBy: string) => request<any>(
+    `/infrastructure/schema-mappings/${mappingId}/confirm`, {
+      method: 'POST', body: JSON.stringify({ confirmed_by: confirmedBy })
+    }
+  ),
 };

@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Knowtique-Epistemic%20OS-5e6ad2?style=for-the-badge&logoColor=white" alt="Knowtique" />
-  <img src="https://img.shields.io/badge/AEOS-Agent%20Runtime-27a644?style=for-the-badge&logoColor=white" alt="AEOS" />
+  <img src="https://img.shields.io/badge/KAEOS-Knowledge%20Augmented%20EOS-5e6ad2?style=for-the-badge&logoColor=white" alt="KAEOS" />
+  <img src="https://img.shields.io/badge/S0--S4-5%20Stratum%20Architecture-27a644?style=for-the-badge&logoColor=white" alt="5-Stratum" />
 </p>
 
-<h1 align="center">Knowtique × AEOS</h1>
+<h1 align="center">KAEOS — Knowledge-Augmented Enterprise Operating System</h1>
 <p align="center">
-  <strong>Enterprise Agentic Knowledge Platform — Powered by the AEOS Agent Runtime</strong>
+  <strong>5-Stratum Epistemic-Agentic Platform — Knowtique × AEOS × Pioneer Intelligence</strong>
 </p>
 
 <p align="center">
@@ -27,17 +27,19 @@
 
 ---
 
-Knowtique is an open-source **enterprise-grade epistemic operating system** — the first platform engineered not to *store* what an organisation knows, but to **operationalise how it actually thinks and decides**.
+KAEOS is an open-source **enterprise-grade epistemic operating system** built on a **5-stratum architecture** — engineered not to *store* what an organisation knows, but to **operationalise how it actually thinks, decides, and evolves**.
 
-Three engines. One loop:
+### The 5-Stratum Architecture
 
-| Engine | What It Does |
-|--------|-------------|
-| **🧠 Knowledge Engine** | Extracts implicit rules from enterprise systems, scores them with 5D confidence vectors, detects contradictions |
-| **📄 Skill Engine** | Compiles validated rules into versioned, machine-executable agent contracts (`SKILL.md`) |
-| **⚡ Execution Engine (AEOS)** | Runs skills through a 7-gate trust pipeline with compliance, fairness, debate, and provenance — then feeds outcomes back |
+| Stratum | Layer | What It Does |
+|---------|-------|-------------|
+| **S0** | 🧠 Epistemic Brain (Knowtique) | Extracts rules, scores with 5D confidence, detects contradictions, compiles SKILL.md contracts |
+| **S1** | 🔧 Infrastructure | 4-tier model routing, inference cost governor, inter-agent protocol, tenant onboarding engine |
+| **S2** | ⚡ AEOS Execution Engine | OODA cognitive loop, 7-gate trust pipeline, debate engine, governance gates |
+| **S3** | 🌐 Pioneer Intelligence | External intel, org intelligence, ethical AI/bias, temporal reasoning, federated learning |
+| **S4** | 🖥️ Experience Layer | Executive cockpit, analyst workspace, connector studio, conversational copilot |
 
-These engines form a **continuous intelligence loop**: Execution outcomes feed back into the Knowledge Engine, confidence recalibrates, skills evolve, and agents get smarter with every decision.
+These strata form a **continuous intelligence loop**: Execution outcomes feed back into the Epistemic Brain, confidence recalibrates, skills evolve, and agents get smarter with every decision.
 
 ---
 
@@ -140,12 +142,12 @@ Prompt → Blueprint → Refine → Approve → Compile → Deploy → Monitor
 
 ---
 
-## 🏗 Architecture
+## 🏗 Architecture (KAEOS 5-Stratum)
 
 ```mermaid
 graph TD
-    subgraph "Knowledge Layer"
-        A[Enterprise Data Sources] --> B[L0: Data Fabric + ETL]
+    subgraph "S0: Epistemic Brain"
+        A[Enterprise Data Sources] --> B["Connector Studio (4-screen)"]
         B --> C[L1: PII Scrubbing + Signal Extraction]
         C --> D[L2: Knowledge Extraction + HDBSCAN]
         D --> E[L3: Polystore — Rules + Graph + Vectors]
@@ -154,8 +156,15 @@ graph TD
         G --> H[L8: SKILL.md Compilation]
     end
 
-    subgraph "AEOS Agent Runtime"
-        H --> I[L9: Skill Router]
+    subgraph "S1: Infrastructure Layer"
+        N1["N1: Model Registry (4-tier)"] --> I
+        N2["N2: Cost Governor"] --> I
+        N3["N3: Agent Protocol + Circuit Breaker"] --> I
+        N4["N4: Tenant Onboarding Engine"] --> B
+    end
+
+    subgraph "S2: AEOS Execution Engine"
+        H --> I["OODA Loop (Observe→Orient→Decide→Act)"]
         I --> J["Gate 1: Compliance (L13)"]
         J --> K["Gate 2: Fairness (P3)"]
         K --> L["Gate 3: Confidence → HITL"]
@@ -166,16 +175,19 @@ graph TD
         P --> F
     end
 
-    subgraph "AEOS Modules"
-        Q[External Intelligence] --> I
-        R[Org Intelligence] --> I
-        S[Temporal Reasoning] --> I
-        T[Federated Learning] --> F
+    subgraph "S3: Pioneer Intelligence"
+        Q[P1: External Intelligence] --> I
+        R[P2: Org Intelligence] --> I
+        S[P3: Ethical AI / Bias Gate] --> K
+        T[P4: Temporal Reasoning] --> I
+        U[P5: Federated Learning] --> F
     end
 
-    subgraph "Trust & Governance"
-        N --> U[L12: Red Team Harness]
-        N --> V[L17: Security Fabric]
+    subgraph "S4: Experience Layer"
+        V[Executive Cockpit] --> I
+        W[Analyst Workspace] --> E
+        X[Chat Copilot] --> I
+        Y[Infrastructure Dashboard] --> N1
     end
 ```
 
@@ -244,13 +256,14 @@ The backend auto-seeds with demo data (6 skills, 24 rules, 18 connectors, sample
 
 | Metric | Count |
 |--------|-------|
-| Backend API Routes | 112 |
-| Backend Services | 29 modules |
-| Domain Models | 22 SQLAlchemy models |
-| Frontend Views | 5 consolidated + 23 detailed pages |
-| Architecture Layers | 30 total |
+| Backend API Routes | **137+** |
+| Backend Services | **33 modules** |
+| Domain Models | **33 SQLAlchemy models** (11 new S1 infrastructure) |
+| Frontend Views | 5 consolidated + **30 detailed pages** |
+| Architecture Strata | **5 (S0–S4)** |
 | AEOS Trust Gates | 7 per execution |
-| API Client Methods | 60+ typed fetch functions |
+| API Client Methods | **85+ typed fetch functions** |
+| KAEOS Infrastructure | N1 Model Registry, N2 Cost Governor, N3 Agent Protocol, N4 Onboarding |
 
 ---
 
@@ -273,7 +286,7 @@ If you discover a security vulnerability, please see [SECURITY.md](SECURITY.md) 
 ---
 
 <p align="center">
-  <strong>Knowtique × AEOS</strong> — Knowledge that thinks. Agents that reason.
+  <strong>KAEOS</strong> — Knowledge that thinks. Agents that reason. Systems that evolve.
   <br/>
   Built with ❤️ for the open-source AI community
 </p>

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Bot, Plus, Play, Square, Pause, CheckCircle2, Clock, AlertTriangle, Sparkles, Send, ChevronRight, Loader2, Workflow } from 'lucide-react';
 import { api } from '../api/client';
 import { useTheme } from '../context/ThemeContext';
+import DeployConfigModal from '../components/DeployConfigModal';
+import type { DeployConfig } from '../components/DeployConfigModal';
 
-const AgentFactory: React.FC = () => {
+const AgentFactory: React.FC<{ domain?: string }> = ({ domain = 'All Domains' }) => {
   const { colors } = useTheme();
   const [tab, setTab] = useState<'create' | 'blueprints' | 'deployed'>('create');
   const [prompt, setPrompt] = useState('');
@@ -12,6 +14,7 @@ const AgentFactory: React.FC = () => {
   const [deployed, setDeployed] = useState<any[]>([]);
   const [selectedBp, setSelectedBp] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [deployTarget, setDeployTarget] = useState<any>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -45,8 +48,9 @@ const AgentFactory: React.FC = () => {
     await loadData();
   };
 
-  const handleDeploy = async (id: string) => {
-    await api.deployBlueprint(id);
+  const handleDeploy = async (id: string, config?: DeployConfig) => {
+    await api.deployBlueprint(id, config ? { risk_level: config.risk_level, confidence_threshold: config.confidence_threshold, hitl_mode: config.hitl_mode, hitl_threshold: config.hitl_threshold } : undefined);
+    setDeployTarget(null);
     await loadData();
     setTab('deployed');
   };
@@ -154,7 +158,7 @@ const AgentFactory: React.FC = () => {
                     </button>
                   )}
                   {bp.status === 'COMPILED' && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeploy(bp.id); }}
+                    <button onClick={(e) => { e.stopPropagation(); setDeployTarget(bp); }}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-medium"
                       style={{ background: 'rgba(39,166,68,0.12)', color: colors.success }}>
                       <Play className="w-3 h-3" /> Deploy
@@ -205,6 +209,17 @@ const AgentFactory: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Deploy Config Modal */}
+      {deployTarget && (
+        <DeployConfigModal
+          blueprintId={deployTarget.id}
+          blueprintName={deployTarget.name || deployTarget.id?.slice(0, 12)}
+          colors={colors}
+          onDeploy={(config) => handleDeploy(deployTarget.id, config)}
+          onCancel={() => setDeployTarget(null)}
+        />
       )}
     </div>
   );

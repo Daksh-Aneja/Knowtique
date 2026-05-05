@@ -57,8 +57,8 @@ export default function ExecutionDetailView({ execution, onBack, colors }: Props
         api.getFairnessLog(10),
       ]);
       if (d.status === 'fulfilled' && d.value) setDebate(d.value);
-      if (f.status === 'fulfilled' && d.value) {
-        const logs = d.value?.logs || f.value?.logs || f.value || [];
+      if (f.status === 'fulfilled' && f.value) {
+        const logs = f.value.logs || f.value || [];
         const matched = Array.isArray(logs) ? logs.filter((l: any) => l.execution_id === execution.id) : [];
         setFairness(matched);
       }

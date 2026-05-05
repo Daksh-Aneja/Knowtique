@@ -13,6 +13,7 @@ _model_modules = [
     "app.models.agent_factory",
     "app.models.fairness",
     "app.models.calendar",
+    "app.models.infrastructure",
 ]
 for _mod in _model_modules:
     try:

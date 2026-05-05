@@ -24,6 +24,19 @@ from app.models.settings import (
     OntologyConfig,
     FederatedConfig,
 )
+from app.models.infrastructure import (
+    ModelTier,
+    ModelRegistryEntry,
+    PromptTemplate,
+    TokenBudget,
+    CostEvent,
+    AgentMessageStatus,
+    AgentMessage,
+    AgentRegistryEntry,
+    OnboardingStage,
+    TenantOnboarding,
+    SchemaMapping,
+)
 
 __all__ = [
     "Base",
@@ -48,4 +61,15 @@ __all__ = [
     "MCPToolConfig",
     "OntologyConfig",
     "FederatedConfig",
+    "ModelTier",
+    "ModelRegistryEntry",
+    "PromptTemplate",
+    "TokenBudget",
+    "CostEvent",
+    "AgentMessageStatus",
+    "AgentMessage",
+    "AgentRegistryEntry",
+    "OnboardingStage",
+    "TenantOnboarding",
+    "SchemaMapping",
 ]

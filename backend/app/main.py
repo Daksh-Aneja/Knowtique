@@ -22,6 +22,7 @@ from app.api.routes import (
     connectors, conflicts, marketplace, security, pipeline,
     predictive, polymorphic, federated, knowtique10x,
     platform_config, enterprise, agent_factory, pioneer,
+    infrastructure,
 )
 
 settings = get_settings()
@@ -88,6 +89,7 @@ app.include_router(platform_config.router, prefix=PREFIX)
 app.include_router(enterprise.router,      prefix=PREFIX)
 app.include_router(agent_factory.router,   prefix=PREFIX)
 app.include_router(pioneer.router,         prefix=PREFIX)
+app.include_router(infrastructure.router,  prefix=PREFIX)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

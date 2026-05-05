@@ -1,25 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import type { SkillItem, ExecutionItem } from '../api/client';
 import { api } from '../api/client';
-import { BrainCircuit, Search, Play, CheckCircle, XCircle, Clock, ChevronDown, ChevronRight, Zap } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import SkillContractViewer from '../components/SkillContractViewer';
+import { BrainCircuit, Search, Play, CheckCircle, XCircle, Clock, ChevronDown, ChevronRight, Zap, FileCode2 } from 'lucide-react';
 
-export default function SkillsRegistry() {
+export default function SkillsRegistry({ domain = 'All Domains' }: { domain?: string }) {
+  const { colors } = useTheme();
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [totalExec, setTotalExec] = useState(0);
   const [avgSr, setAvgSr] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [viewContract, setViewContract] = useState<SkillItem | null>(null);
   const [execs, setExecs] = useState<ExecutionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    setLoading(true);
+    const d = domain.toLowerCase() === 'all domains' ? 'all' : domain.toLowerCase();
+    const params = d === 'all' ? {} : { domain: d };
+    
     api.getSkills().then((r) => {
       setSkills(r.skills);
       setTotalExec(r.total_executions);
       setAvgSr(r.avg_success_rate);
       setLoading(false);
     });
-  }, []);
+  }, [domain]);
 
   useEffect(() => {
     if (selected) {
@@ -32,7 +40,12 @@ export default function SkillsRegistry() {
     s.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="p-8 text-gray-400 animate-pulse">Loading Skills…</div>;
+  if (loading) return <div className="p-8 animate-pulse" style={{ color: colors.inkTertiary }}>Loading Skills…</div>;
+
+  // Show contract viewer if a skill is selected for contract view
+  if (viewContract) {
+    return <SkillContractViewer skill={viewContract} colors={colors} onClose={() => setViewContract(null)} />;
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -129,14 +142,24 @@ export default function SkillsRegistry() {
                 </div>
               )}
 
-              {/* Expand Toggle */}
-              <button
-                onClick={() => setSelected(selected === s.skill_id ? null : s.skill_id)}
-                className="mt-4 w-full text-center text-xs text-gray-500 hover:text-indigo-600 flex items-center justify-center gap-1 transition-colors"
-              >
-                {selected === s.skill_id ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                {selected === s.skill_id ? 'Collapse' : 'View Details'}
-              </button>
+              {/* Action Buttons */}
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => setViewContract(s)}
+                  className="flex-1 text-center text-xs font-medium flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg transition-colors"
+                  style={{ background: `${colors.primary}12`, color: colors.primary }}
+                >
+                  <FileCode2 className="w-3 h-3" /> View Contract
+                </button>
+                <button
+                  onClick={() => setSelected(selected === s.skill_id ? null : s.skill_id)}
+                  className="text-xs flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg transition-colors"
+                  style={{ background: colors.surface2 || '#f3f4f6', color: colors.inkSubtle || '#6b7280' }}
+                >
+                  {selected === s.skill_id ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {selected === s.skill_id ? 'Collapse' : 'Executions'}
+                </button>
+              </div>
             </div>
 
             {/* Expanded Detail */}

@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import ExecutionDetailView from '../components/ExecutionDetailView';
 import { Bot, CheckCircle, XCircle, Clock, AlertTriangle, Zap, ArrowRight, Activity, ChevronRight } from 'lucide-react';
 
-export default function AgentMonitor() {
+export default function AgentMonitor({ domain = 'All Domains' }: { domain?: string }) {
   const { colors } = useTheme();
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [allExecs, setAllExecs] = useState<ExecutionItem[]>([]);

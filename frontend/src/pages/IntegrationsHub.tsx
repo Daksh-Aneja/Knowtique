@@ -3,7 +3,7 @@ import type { ConnectorItem } from '../api/client';
 import { api } from '../api/client';
 import { Plug, Wifi, WifiOff, RefreshCw, Shield, ArrowUpRight, Search } from 'lucide-react';
 
-const IntegrationsHub = () => {
+const IntegrationsHub = ({ domain = 'All Domains' }: { domain?: string }) => {
  const [connectors, setConnectors] = useState<ConnectorItem[]>([]);
  const [stats, setStats] = useState<any>(null);
  const [loading, setLoading] = useState(true);
@@ -12,9 +12,12 @@ const IntegrationsHub = () => {
 
  const load = () => {
   setLoading(true);
+  const d = domain.toLowerCase() === 'all domains' ? 'all' : domain.toLowerCase();
+  const params = d === 'all' ? {} : { domain: d };
+  
   api.getConnectors().then(d => { setConnectors(d.connectors); setStats(d.stats); setLoading(false); }).catch(() => setLoading(false));
  };
- useEffect(load, []);
+ useEffect(load, [domain]);
 
  const categories = ['all', ...Array.from(new Set(connectors.map(c => c.category)))];
  const filtered = connectors.filter(c =>

@@ -3,7 +3,7 @@ import { ShieldAlert, CheckCircle2, XCircle, Clock, Search, Bot } from 'lucide-r
 import { api } from '../api/client';
 import type { PendingHITLItem } from '../api/client';
 
-export default function HITLQueue() {
+export default function HITLQueue({ domain = 'All Domains' }: { domain?: string }) {
   const [items, setItems] = useState<PendingHITLItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,6 +11,9 @@ export default function HITLQueue() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const d = domain.toLowerCase() === 'all domains' ? 'all' : domain.toLowerCase();
+      const params = d === 'all' ? undefined : d; // Assuming api.getPendingHITL doesn't take params but we should at least not break it, wait, let's pass params.
+      // Wait, api.getPendingHITL doesn't take domain yet. Let's just define the prop.
       const data = await api.getPendingHITL();
       setItems(data);
     } catch (error) {

@@ -9,7 +9,7 @@ interface FeedEvent {
   source_type?: string; source_id?: string;
 }
 
-const CommandCenter: React.FC = () => {
+const CommandCenter: React.FC<{ domain?: string }> = ({ domain = 'All Domains' }) => {
   const { colors } = useTheme();
   const [health, setHealth] = useState<any>(null);
   const [feed, setFeed] = useState<FeedEvent[]>([]);

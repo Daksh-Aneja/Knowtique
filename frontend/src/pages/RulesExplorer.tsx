@@ -14,19 +14,26 @@ const TIER_STYLE: Record<string, string> = {
 
 const DOMAINS = ['all', 'support', 'sales', 'engineering', 'finance', 'hr'];
 
-export default function RulesExplorer() {
+export default function RulesExplorer({ domain = 'All Domains' }: { domain?: string }) {
   const [rules, setRules] = useState<RuleItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [domain, setDomain] = useState('all');
+  const [localDomain, setLocalDomain] = useState('all');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sync localDomain with the incoming domain prop
+  useEffect(() => {
+    if (domain) {
+      setLocalDomain(domain.toLowerCase() === 'all domains' ? 'all' : domain.toLowerCase());
+    }
+  }, [domain]);
+
   useEffect(() => {
     setLoading(true);
-    const params = domain === 'all' ? {} : { domain };
+    const params = localDomain === 'all' ? {} : { domain: localDomain };
     api.getRules(params).then((r) => { setRules(r.rules); setTotal(r.total); setLoading(false); });
-  }, [domain]);
+  }, [localDomain]);
 
   const filteredRules = rules.filter(r =>
     r.statement.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,9 +69,9 @@ export default function RulesExplorer() {
         {DOMAINS.map((d) => (
           <button
             key={d}
-            onClick={() => setDomain(d)}
+            onClick={() => setLocalDomain(d)}
             className={`px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${
-              domain === d
+              localDomain === d
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
             }`}
